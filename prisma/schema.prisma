@@ -1,0 +1,156 @@
+// Database schema for Task Editor.
+// Matches the data model in docs/PLAN.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  DONE
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RecurrenceRule {
+  DAILY
+  WEEKDAYS
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  color       String        @default("#3b82f6")
+  startDate   DateTime?     @db.Date
+  dueDate     DateTime?     @db.Date
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tasks          Task[]
+  recurringTasks RecurringTask[]
+  timeLogs       TimeLog[]
+}
+
+model LearningPath {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  color       String        @default("#10b981")
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  steps          LearningStep[]
+  tasks          Task[]
+  recurringTasks RecurringTask[]
+  timeLogs       TimeLog[]
+}
+
+model LearningStep {
+  id             String       @id @default(cuid())
+  learningPathId String
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  title          String
+  order          Int
+  done           Boolean      @default(false)
+  doneAt         DateTime?
+  resourceUrl    String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([learningPathId, order])
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  title           String
+  notes           String?
+  date            DateTime   @db.Date
+  status          TaskStatus @default(TODO)
+  priority        Priority   @default(MEDIUM)
+  estimateMinutes Int?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  projectId       String?
+  project         Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  learningPathId  String?
+  learningPath    LearningPath?  @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
+  recurringTaskId String?
+  recurringTask   RecurringTask? @relation(fields: [recurringTaskId], references: [id], onDelete: SetNull)
+
+  @@index([date])
+  @@index([status])
+}
+
+model RecurringTask {
+  id              String         @id @default(cuid())
+  title           String
+  notes           String?
+  rule            RecurrenceRule @default(DAILY)
+  priority        Priority       @default(MEDIUM)
+  estimateMinutes Int?
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  learningPathId String?
+  learningPath   LearningPath? @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
+
+  tasks Task[]
+}
+
+model TimeLog {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  minutes   Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  learningPathId String?
+  learningPath   LearningPath? @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
+
+  @@index([date])
+}

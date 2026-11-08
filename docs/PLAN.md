@@ -47,7 +47,10 @@ changes needed to add or edit projects, learning paths or tasks.
 13. **Backup** — export / import all data as JSON.
 14. **Viewer role (optional)** — read-only account to share progress.
 
-## Data model (first draft)
+## Data model
+
+Implemented in [`prisma/schema.prisma`](../prisma/schema.prisma). Task also links
+back to the RecurringTask that created it.
 
 - **User** — name, email, password hash, role (`ADMIN` / `VIEWER`)
 - **Project** — name, description, status (`ACTIVE` / `PAUSED` / `DONE` / `ARCHIVED`), color, start date, due date, notes
@@ -61,7 +64,7 @@ changes needed to add or edit projects, learning paths or tasks.
 
 | # | Pull request | Label |
 |---|---|---|
-| 0 | Project plan, docs, changelog (this) | `docs` |
+| 0 | Project plan, docs, changelog | `docs` |
 | 1 | Project setup (Next.js, Tailwind, Prisma, Postgres) | `setup` |
 | 2 | Login + admin account | `feature` |
 | 3 | Projects | `feature` |
