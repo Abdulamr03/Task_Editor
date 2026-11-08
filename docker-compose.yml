@@ -1,0 +1,17 @@
+# Local PostgreSQL database for development.
+# Start: docker compose up -d   Stop: docker compose down
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: task_editor
+      POSTGRES_PASSWORD: task_editor
+      POSTGRES_DB: task_editor
+    ports:
+      - "5432:5432"
+    volumes:
+      - task_editor_db:/var/lib/postgresql/data
+
+volumes:
+  task_editor_db:
