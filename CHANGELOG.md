@@ -20,6 +20,8 @@ Each entry names the pull request label.
 - **Password reset command**: `npm run user:reset-password`.
 - Forms keep the typed name/email after an error (passwords are cleared).
 - New setting `SESSION_SECRET` in `.env.example`; README explains login and setup.
+- `package.json` now requires Node.js 20.19+ (`engines`, `.npmrc`, `.nvmrc`). Older
+  versions fail to build Tailwind with `ERR_REQUIRE_ESM`; `npm install` now says so clearly.
 - The home page now greets the logged-in user (the database check page was removed).
 
 ### `setup` — Project setup

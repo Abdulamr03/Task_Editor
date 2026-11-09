@@ -8,7 +8,7 @@ tasks and progress.
 
 ## Run it locally
 
-You need **Node.js 20+** and either **Docker** or your own **PostgreSQL 16** database.
+You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) and either **Docker** or your own **PostgreSQL 16** database.
 
 1. Install packages:
    ```bash
