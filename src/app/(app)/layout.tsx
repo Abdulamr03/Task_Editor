@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { logout } from "@/app/login/actions";
+import { NavLinks } from "@/components/nav-links";
 
 // Layout for every page that needs a logged-in user.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -9,9 +10,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <span className="font-bold">Task Editor</span>
+          <div className="flex items-center gap-4">
+            <span className="font-bold">Task Editor</span>
+            <NavLinks />
+          </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-slate-500">
+            <span className="hidden text-slate-500 sm:inline">
               {user.name}
               {user.role === "VIEWER" && " (viewer)"}
             </span>

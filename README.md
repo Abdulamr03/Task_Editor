@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup and login done. Projects, learning paths and tasks come next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login and projects done. Learning paths and tasks come next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -47,6 +47,20 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
   ```
   It asks for the email and a new password. The password is visible while you type it.
 
+## Projects
+
+Open **Projects** in the top bar.
+
+- **New project**: name, description, status, start and due date, colour, notes.
+  The due date can't be before the start date.
+- **Project page**: progress (finished tasks out of all tasks), dates, notes, and
+  buttons to **Edit**, **Archive** / **Unarchive** and **Delete**.
+- **Filters**: *Current* (everything except archived), *Active*, *Paused*, *Done*, *Archived*.
+- **Due dates** turn amber within 7 days and red when overdue.
+- **Archive vs delete**: archiving hides a project but keeps it. Deleting removes it
+  for good; its tasks are kept but no longer linked to a project.
+- Only admins see the edit buttons. Viewers can look but not change anything.
+
 ## Scripts
 
 | Command | What it does |
@@ -66,12 +80,15 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
 prisma/schema.prisma   Database tables (see data model in docs/PLAN.md)
 prisma/migrations/     Database change history
 src/app/(app)/         Pages that need a login (layout with header + log out)
+src/app/(app)/projects Projects list, new, detail and edit pages + save actions
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
-src/components/        Shared UI pieces
+src/components/        Shared UI pieces (cards, buttons, progress bar, nav)
 src/lib/db.ts          Shared database client
 src/lib/session.ts     Login cookie (signed, HTTP-only, 7 days)
 src/lib/auth.ts        Password hashing, requireUser / requireAdmin
+src/lib/dates.ts       Date helpers (no time-zone shifts)
+src/lib/projects.ts    Project statuses, labels and colours
 src/middleware.ts      Sends logged-out visitors to /login
 scripts/               Command-line helpers (password reset)
 docker-compose.yml     Local PostgreSQL

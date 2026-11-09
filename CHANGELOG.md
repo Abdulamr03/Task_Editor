@@ -5,6 +5,21 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Projects
+- **Projects list** (`/projects`): cards with colour, status, description, due
+  date and a progress bar. Filters: Current, Active, Paused, Done, Archived.
+- **New / edit project** form: name, description, status, start and due date,
+  colour, notes. Checks the name, dates (due can't be before start) and keeps
+  what you typed after an error.
+- **Project page** (`/projects/<id>`): progress, dates, notes, and Edit,
+  Archive / Unarchive and Delete (asks first; tasks are kept, just unlinked).
+- **Due dates** are amber within 7 days and red when overdue.
+- **Progress** counts finished tasks out of all tasks linked to the project
+  (fills in once Tasks are added).
+- **Top bar** now has Home and Projects links.
+- **Viewers** don't see edit buttons; all saving is admin-only on the server too.
+- Dark mode now also darkens date pickers and other form controls.
+
 ### `feature` — Login + admin account
 - **First-time setup page** (`/setup`): creates the admin account when there
   are no users yet; closed for good once an account exists.
