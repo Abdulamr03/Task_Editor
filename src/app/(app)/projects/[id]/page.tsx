@@ -6,7 +6,8 @@ import { getProjectProgress } from "@/lib/project-progress";
 import { Card, EmptyState, PageHeader, ProgressBar } from "@/components/ui";
 import { StatusBadge } from "@/components/status-badge";
 import { dueNote } from "@/components/due-label";
-import { ProjectActionsBar } from "../project-actions-bar";
+import { ItemActionsBar } from "@/components/item-actions-bar";
+import { deleteProject, setProjectStatus } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +25,26 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       <PageHeader
         back={{ href: "/projects", label: "Projects" }}
         title={
-          <span className="flex flex-wrap items-center gap-3">
-            <span className="inline-block h-3.5 w-3.5 rounded-full" style={{ backgroundColor: project.color }} />
-            {project.name}
-            <StatusBadge status={project.status} />
-          </span>
+          <>
+            <span className="mr-3 inline-block h-3.5 w-3.5 rounded-full align-middle" style={{ backgroundColor: project.color }} />
+            <span className="align-middle">{project.name}</span>
+            <span className="ml-3 inline-block align-middle text-base font-normal">
+              <StatusBadge status={project.status} />
+            </span>
+          </>
         }
-        actions={user.role === "ADMIN" && <ProjectActionsBar id={project.id} name={project.name} status={project.status} />}
+        actions={
+          user.role === "ADMIN" && (
+            <ItemActionsBar
+              editHref={`/projects/${id}/edit`}
+              name={project.name}
+              status={project.status}
+              setStatus={setProjectStatus.bind(null, id)}
+              remove={deleteProject.bind(null, id)}
+              deleteWarning="Its tasks are kept but no longer linked to a project."
+            />
+          )
+        }
       />
 
       {project.description && <p className="-mt-4 text-slate-500">{project.description}</p>}

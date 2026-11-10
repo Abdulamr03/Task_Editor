@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth";
 import { Card, PageHeader } from "@/components/ui";
 import { PROJECT_COLORS } from "@/lib/projects";
 import { toDateInput, today } from "@/lib/dates";
-import { ProjectForm } from "../project-form";
+import { ItemForm } from "@/components/item-form";
 import { createProject } from "../actions";
 
 export default async function NewProjectPage() {
@@ -12,7 +12,7 @@ export default async function NewProjectPage() {
     <main className="max-w-2xl">
       <PageHeader title="New project" back={{ href: "/projects", label: "Projects" }} />
       <Card>
-        <ProjectForm
+        <ItemForm withDates descriptionHint="One or two lines about the project."
           action={createProject}
           submitLabel="Create project"
           cancelHref="/projects"

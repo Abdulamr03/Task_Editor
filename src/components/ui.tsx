@@ -45,12 +45,22 @@ export function PageHeader({
   );
 }
 
-export function ProgressBar({ done, total, color }: { done: number; total: number; color: string }) {
+export function ProgressBar({
+  done,
+  total,
+  color,
+  unit = "tasks",
+}: {
+  done: number;
+  total: number;
+  color: string;
+  unit?: string;
+}) {
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs text-slate-500">
-        <span>{total === 0 ? "No tasks yet" : `${done} of ${total} tasks done`}</span>
+        <span>{total === 0 ? `No ${unit} yet` : `${done} of ${total} ${unit} done`}</span>
         <span>{percent}%</span>
       </div>
       <div

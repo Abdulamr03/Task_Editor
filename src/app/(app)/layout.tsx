@@ -9,9 +9,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-4">
-            <span className="font-bold">Task Editor</span>
+        {/* On phones the links move to a second row under the app name. */}
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+          <span className="whitespace-nowrap font-bold">Task Editor</span>
+          <div className="order-last -mx-3 w-full overflow-x-auto sm:order-none sm:mx-0 sm:mr-auto sm:w-auto">
             <NavLinks />
           </div>
           <div className="flex items-center gap-3 text-sm">
@@ -20,7 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               {user.role === "VIEWER" && " (viewer)"}
             </span>
             <form action={logout}>
-              <button type="submit" className="rounded-md border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800">
+              <button type="submit" className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800">
                 Log out
               </button>
             </form>

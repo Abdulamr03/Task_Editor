@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { toDateInput } from "@/lib/dates";
 import { Card, PageHeader } from "@/components/ui";
-import { ProjectForm } from "../../project-form";
+import { ItemForm } from "@/components/item-form";
 import { updateProject } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
     <main className="max-w-2xl">
       <PageHeader title={`Edit ${project.name}`} back={{ href: `/projects/${id}`, label: project.name }} />
       <Card>
-        <ProjectForm
+        <ItemForm withDates descriptionHint="One or two lines about the project."
           action={updateProject.bind(null, id)}
           submitLabel="Save changes"
           cancelHref={`/projects/${id}`}

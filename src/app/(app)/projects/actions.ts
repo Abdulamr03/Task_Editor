@@ -7,8 +7,8 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDateInput } from "@/lib/dates";
 import { isProjectStatus } from "@/lib/projects";
+import type { ItemFormState as ProjectFormState } from "@/components/item-form";
 
-export type ProjectFormState = { error?: string; values?: Record<string, string> } | undefined;
 
 const FIELDS = ["name", "description", "status", "color", "startDate", "dueDate", "notes"] as const;
 
