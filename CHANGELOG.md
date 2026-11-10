@@ -5,6 +5,25 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Daily tasks, recurring tasks and carry over
+- **Today page** (`/tasks`): quick-add box (title, plus optional priority, time
+  estimate in minutes, project / learning path, notes), a summary
+  ("1 of 3 done · about 1h 30m left") and the day's tasks: in progress first,
+  then by priority; finished tasks in a separate **Done** list.
+- **Task actions**: tick off (saves when), Start / Pause (*in progress*),
+  Tomorrow →, edit (title, date, priority, time, link, notes), delete.
+- **Other days**: ‹ Today › buttons and a date field (`/tasks?date=YYYY-MM-DD`).
+- **Carry over**: Today lists unfinished tasks from earlier days in red, each
+  with **Move to today**, plus **Move all to today**.
+- **Recurring tasks** (`/tasks/recurring`): every day or weekdays only, with
+  priority, time and link; pause / resume, delete (keeps tasks already added).
+  Each one adds its task to Today once per day, the first time Today is opened.
+- **Project and learning path pages** now list their linked tasks (unfinished
+  ones and the 10 most recently finished); project progress bars now fill in.
+- **Top bar**: new Today link.
+- **Database migration** `recurring_once_per_day`: `RecurringTask.lastCreatedOn`
+  and a unique (recurring task, date) rule on `Task`. Run `npm run db:migrate`.
+
 ### `feature` — Learning paths
 - **Learning paths list** (`/learning`): cards with colour, status, description,
   the next step to do and a progress bar. Same filters as projects.

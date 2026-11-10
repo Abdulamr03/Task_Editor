@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { formatDate } from "@/lib/dates";
 import { getProjectProgress } from "@/lib/project-progress";
-import { Card, EmptyState, PageHeader, ProgressBar } from "@/components/ui";
+import { Card, PageHeader, ProgressBar } from "@/components/ui";
+import { LinkedTasks } from "@/components/linked-tasks";
 import { StatusBadge } from "@/components/status-badge";
 import { dueNote } from "@/components/due-label";
 import { ItemActionsBar } from "@/components/item-actions-bar";
@@ -83,10 +84,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         )}
       </Card>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Tasks</h2>
-        <EmptyState>Tasks for this project will appear here once the Tasks feature is added.</EmptyState>
-      </section>
+      <LinkedTasks where={{ projectId: id }} isAdmin={user.role === "ADMIN"} />
     </main>
   );
 }
