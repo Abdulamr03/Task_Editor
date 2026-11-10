@@ -5,6 +5,27 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Import learning paths from PDF, with milestones
+- **Import from PDF** (`/learning/import`): upload a syllabus, textbook or notes
+  (up to 24 MB / 600 pages, optional note). Claude Opus 5.5 reads it and
+  proposes a learning path split into **milestones** and **levels** (with notes,
+  time estimates and page references), using structured JSON output. Server-side
+  refusal fallback is on (`fallbacks: "default"`).
+- **Already covered**: your finished steps from other learning paths are sent
+  along; levels they cover are marked and **ticked by default** on the review
+  screen (untick to redo). Unknown ids from the AI are dropped.
+- **Review screen**: rename path / milestones / levels, pick a colour, reorder
+  and remove milestones, remove levels; then **Create learning path**.
+- **Milestones on learning paths**: steps are grouped by milestone with a
+  progress bar each; add, rename, reorder and delete milestones (steps kept);
+  **+ Add level** inside a milestone; ↑ ↓ moves within its milestone.
+- Steps can show a time estimate, page reference and "Already covered by …" link.
+- Clear messages for: no API key (setup steps shown), not a PDF, too big,
+  rejected key, rate limits, refusals, too-long documents.
+- **Database migration** `milestones_and_covered_steps`: new `Milestone` table;
+  `LearningStep.milestoneId`, `coveredById`, `estimateMinutes`, `pages`.
+- New setting `ANTHROPIC_API_KEY` (optional) in `.env.example`; new package `@anthropic-ai/sdk`.
+
 ### `feature` — Settings, account menu and appearance
 - **Account menu** in the top bar (your initials): name and email, Light /
   Dark / System switch, Settings, Switch account, Log out.

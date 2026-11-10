@@ -80,25 +80,54 @@ model LearningPath {
   updatedAt   DateTime      @updatedAt
 
   steps          LearningStep[]
+  milestones     Milestone[]
   tasks          Task[]
   recurringTasks RecurringTask[]
   timeLogs       TimeLog[]
 }
 
-model LearningStep {
+// A stage of a learning path (e.g. a chapter or module) that groups its steps.
+model Milestone {
   id             String       @id @default(cuid())
   learningPathId String
   learningPath   LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
   title          String
+  description    String?
   order          Int
-  done           Boolean      @default(false)
-  doneAt         DateTime?
-  resourceUrl    String?
-  notes          String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
+  steps LearningStep[]
+
   @@index([learningPathId, order])
+}
+
+// A step ("level") of a learning path, optionally inside a milestone.
+model LearningStep {
+  id              String       @id @default(cuid())
+  learningPathId  String
+  learningPath    LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  // Deleting a milestone keeps its steps; they move to "Other steps".
+  milestoneId     String?
+  milestone       Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  title           String
+  order           Int
+  done            Boolean      @default(false)
+  doneAt          DateTime?
+  resourceUrl     String?
+  notes           String?
+  estimateMinutes Int?
+  // Where it is in the source, e.g. "pp. 12–20" (from PDF import).
+  pages           String?
+  // An earlier step that already covered this one (found by PDF import).
+  coveredById     String?
+  coveredBy       LearningStep?  @relation("CoveredBy", fields: [coveredById], references: [id], onDelete: SetNull)
+  covers          LearningStep[] @relation("CoveredBy")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([learningPathId, order])
+  @@index([milestoneId])
 }
 
 model Task {

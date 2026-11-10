@@ -108,10 +108,15 @@ export async function addStep(pathId: string, _state: StepFormState, formData: F
   const result = readStepForm(formData);
   if (!result.ok) return result.state;
 
+  // Optional milestone; it must belong to this learning path.
+  const milestoneId = String(formData.get("milestoneId") ?? "") || null;
+  if (milestoneId && !(await db.milestone.count({ where: { id: milestoneId, learningPathId: pathId } }))) {
+    return { error: "This milestone no longer exists." };
+  }
   const last = await db.learningStep.aggregate({ where: { learningPathId: pathId }, _max: { order: true } });
   try {
     await db.learningStep.create({
-      data: { ...result.data, learningPathId: pathId, order: (last._max.order ?? 0) + 1 },
+      data: { ...result.data, learningPathId: pathId, milestoneId, order: (last._max.order ?? 0) + 1 },
     });
   } catch {
     return { error: "This learning path no longer exists." };
@@ -139,7 +144,7 @@ export async function toggleStep(stepId: string, done: boolean): Promise<void> {
   if (step) refresh(step.learningPathId);
 }
 
-// Swap a step with the one above or below it.
+// Swap a step with the one above or below it (within the same milestone).
 export async function moveStep(stepId: string, direction: "up" | "down"): Promise<void> {
   await requireAdmin();
   await db.$transaction(async (tx) => {
@@ -148,6 +153,7 @@ export async function moveStep(stepId: string, direction: "up" | "down"): Promis
     const neighbour = await tx.learningStep.findFirst({
       where: {
         learningPathId: step.learningPathId,
+        milestoneId: step.milestoneId,
         order: direction === "up" ? { lt: step.order } : { gt: step.order },
       },
       orderBy: { order: direction === "up" ? "desc" : "asc" },
@@ -164,4 +170,57 @@ export async function deleteStep(stepId: string): Promise<void> {
   await requireAdmin();
   const step = await db.learningStep.delete({ where: { id: stepId } }).catch(() => null);
   if (step) refresh(step.learningPathId);
+}
+
+// ---------- Milestones ----------
+
+function readMilestoneTitle(value: FormDataEntryValue | null): string | null {
+  const title = String(value ?? "").trim();
+  return title && title.length <= 200 ? title : null;
+}
+
+export async function addMilestone(pathId: string, _state: StepFormState, formData: FormData): Promise<StepFormState> {
+  await requireAdmin();
+  const title = readMilestoneTitle(formData.get("title"));
+  if (!title) return { error: "Enter a milestone name (up to 200 characters).", values: { title: String(formData.get("title") ?? "") } };
+  const last = await db.milestone.aggregate({ where: { learningPathId: pathId }, _max: { order: true } });
+  try {
+    await db.milestone.create({ data: { learningPathId: pathId, title, order: (last._max.order ?? 0) + 1 } });
+  } catch {
+    return { error: "This learning path no longer exists." };
+  }
+  refresh(pathId);
+  return { savedAt: Date.now() };
+}
+
+export async function renameMilestone(id: string, title: string): Promise<string | undefined> {
+  await requireAdmin();
+  const clean = readMilestoneTitle(title);
+  if (!clean) return "Enter a milestone name (up to 200 characters).";
+  const m = await db.milestone.update({ where: { id }, data: { title: clean } }).catch(() => null);
+  if (m) refresh(m.learningPathId);
+}
+
+// Deleting a milestone keeps its steps; they move to "Other steps".
+export async function deleteMilestone(id: string): Promise<void> {
+  await requireAdmin();
+  const m = await db.milestone.delete({ where: { id } }).catch(() => null);
+  if (m) refresh(m.learningPathId);
+}
+
+export async function moveMilestone(id: string, direction: "up" | "down"): Promise<void> {
+  await requireAdmin();
+  const pathId = await db.$transaction(async (tx) => {
+    const m = await tx.milestone.findUnique({ where: { id } });
+    if (!m) return null;
+    const other = await tx.milestone.findFirst({
+      where: { learningPathId: m.learningPathId, order: direction === "up" ? { lt: m.order } : { gt: m.order } },
+      orderBy: { order: direction === "up" ? "desc" : "asc" },
+    });
+    if (!other) return m.learningPathId;
+    await tx.milestone.update({ where: { id: m.id }, data: { order: other.order } });
+    await tx.milestone.update({ where: { id: other.id }, data: { order: m.order } });
+    return m.learningPathId;
+  });
+  if (pathId) refresh(pathId);
 }

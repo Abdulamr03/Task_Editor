@@ -109,6 +109,29 @@ split into steps you tick off.
 - **Progress** is finished steps out of all steps. The list shows the next step to do.
 - **Archive / delete** work like projects. Deleting a path also deletes its steps.
 - Viewers see the steps but can't tick or change them.
+- **Milestones**: group steps into stages (modules, chapters). Each milestone
+  has its own progress bar; ↑ ↓ ✎ ✕ move, rename and delete it (its steps are
+  kept and move to "Other steps"). Use **+ Add milestone** and **+ Add level**.
+
+### Import a learning path from a PDF
+
+**Learning → 📄 Import from PDF** turns a syllabus, textbook or course notes
+into a learning path with milestones and levels, using Claude (Anthropic's AI).
+
+1. One-time setup: create an API key at console.anthropic.com (billed per use,
+   separate from a Claude chat subscription), add `ANTHROPIC_API_KEY="sk-ant-…"`
+   to `.env`, and restart `npm run dev`.
+2. Choose a PDF (up to 24 MB / 600 pages), optionally add a note such as
+   "only chapters 3–8", and click **Read PDF and propose a plan** (usually
+   30 seconds to 2 minutes).
+3. Review the plan: rename the path, milestones and levels, reorder or remove
+   milestones, remove levels. Levels that steps you've **already finished** in
+   other learning paths cover are marked "Already covered" and **ticked by
+   default**; untick any you want to do again.
+4. **Create learning path**. Covered levels link to the step that covered them.
+
+The PDF and the titles of your finished steps are sent to Anthropic. Model:
+Claude Opus 5.5 (`src/lib/ai/pdf-plan.ts`).
 
 ## Daily tasks
 
@@ -180,7 +203,8 @@ prisma/schema.prisma   Database tables (see data model in docs/PLAN.md)
 prisma/migrations/     Database change history
 src/app/(app)/         Pages that need a login (layout with header + log out)
 src/app/(app)/projects Projects list, new, detail and edit pages + save actions
-src/app/(app)/learning Learning paths and their steps
+src/app/(app)/learning Learning paths, milestones and steps; import/ = PDF import
+src/lib/ai/pdf-plan.ts Sends a PDF to Claude and checks the proposed plan
 src/app/(app)/tasks    Today / any day, recurring tasks, task actions
 src/app/(app)/time     Time log: log, week totals, entries
 src/app/(app)/export   Export page; export/pdf/route.ts makes the PDF

@@ -17,7 +17,13 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const path = await db.learningPath.findUnique({
     where: { id },
-    include: { steps: { orderBy: { order: "asc" } } },
+    include: {
+      milestones: { orderBy: { order: "asc" } },
+      steps: {
+        orderBy: { order: "asc" },
+        include: { coveredBy: { select: { title: true, learningPath: { select: { id: true, title: true } } } } },
+      },
+    },
   });
   if (!path) notFound();
   const time = await getTimeTotals({ learningPathId: id });
@@ -62,11 +68,12 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
       <TimeSpent total={time.total} week={time.week} color={path.color} />
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Steps</h2>
+        <h2 className="mb-3 text-lg font-semibold">{path.milestones.length ? "Milestones" : "Steps"}</h2>
         <StepList
           pathId={path.id}
           isAdmin={isAdmin}
           color={path.color}
+          milestones={path.milestones.map((m) => ({ id: m.id, title: m.title, description: m.description }))}
           steps={path.steps.map((s) => ({
             id: s.id,
             title: s.title,
@@ -74,6 +81,12 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
             doneAt: s.doneAt?.toISOString() ?? null,
             resourceUrl: s.resourceUrl,
             notes: s.notes,
+            milestoneId: s.milestoneId,
+            estimateMinutes: s.estimateMinutes,
+            pages: s.pages,
+            coveredBy: s.coveredBy
+              ? { title: s.coveredBy.title, pathId: s.coveredBy.learningPath.id, pathTitle: s.coveredBy.learningPath.title }
+              : null,
           }))}
         />
       </section>
