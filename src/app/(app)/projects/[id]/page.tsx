@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/dates";
 import { getProjectProgress } from "@/lib/project-progress";
 import { Card, PageHeader, ProgressBar } from "@/components/ui";
 import { LinkedTasks } from "@/components/linked-tasks";
+import { TimeSpent } from "@/components/time-spent";
+import { getTimeTotals } from "@/lib/time-stats";
 import { StatusBadge } from "@/components/status-badge";
 import { dueNote } from "@/components/due-label";
 import { ItemActionsBar } from "@/components/item-actions-bar";
@@ -18,7 +20,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await db.project.findUnique({ where: { id } });
   if (!project) notFound();
 
-  const progress = (await getProjectProgress([id])).get(id) ?? { done: 0, total: 0 };
+  const [progressMap, time] = await Promise.all([getProjectProgress([id]), getTimeTotals({ projectId: id })]);
+  const progress = progressMap.get(id) ?? { done: 0, total: 0 };
   const finished = project.status === "DONE" || project.status === "ARCHIVED";
 
   return (
@@ -74,6 +77,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           )}
         </Card>
       </div>
+
+      <TimeSpent total={time.total} week={time.week} color={project.color} />
 
       <Card>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Notes</h2>

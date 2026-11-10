@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login, projects, learning paths, daily tasks and dashboard done. The time log comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login, projects, learning paths, daily tasks, dashboard and time log done. PDF export comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -109,6 +109,20 @@ Open **Today** in the top bar.
 - Tasks linked to a project or learning path also appear on its page, and
   count towards the project's progress bar.
 
+## Time log
+
+Open **Time** in the top bar to record how long you actually spent on things.
+
+- **Log time**: date (today by default), time spent, project or learning path
+  (optional), note (optional). Time can be typed as `45`, `45m`, `1h`,
+  `1h 30m`, `1h30`, `1.5h` or `1:30`, or picked with the quick buttons.
+  After saving, the date and project stay filled in for the next entry.
+- **Week view**: ‹ This week › to move between weeks. The total and a bar per
+  project / learning path show where the time went, biggest first.
+- **Entries** are grouped by day; ✎ edits and ✕ deletes an entry.
+- Project and learning path pages show **Time spent** (in total and this week).
+  The dashboard's **This week** tile shows the hours logged.
+
 ## Scripts
 
 | Command | What it does |
@@ -131,6 +145,7 @@ src/app/(app)/         Pages that need a login (layout with header + log out)
 src/app/(app)/projects Projects list, new, detail and edit pages + save actions
 src/app/(app)/learning Learning paths and their steps
 src/app/(app)/tasks    Today / any day, recurring tasks, task actions
+src/app/(app)/time     Time log: log, week totals, entries
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
 src/components/        Shared UI pieces (cards, buttons, progress bar, nav, item form)
@@ -142,6 +157,8 @@ src/lib/projects.ts    Project statuses, labels and colours
 src/lib/tasks.ts       Task priorities, repeat rules, time formatting
 src/lib/recurring.ts   Adds today's recurring tasks (once per day)
 src/lib/stats.ts       Dashboard numbers: streak, tasks done this week
+src/lib/duration.ts    Reads "1h 30m", "1:30", "45"… as minutes
+src/lib/time-stats.ts  Week helpers and time totals
 src/middleware.ts      Sends logged-out visitors to /login
 scripts/               Command-line helpers (password reset)
 docker-compose.yml     Local PostgreSQL

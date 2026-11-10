@@ -8,6 +8,7 @@ import { sortTasks, taskInclude, toTaskItem } from "@/lib/task-items";
 import { getProjectProgress } from "@/lib/project-progress";
 import { getLearningProgress } from "@/lib/learning-progress";
 import { getStreak, getThisWeek } from "@/lib/stats";
+import { getTimeTotals } from "@/lib/time-stats";
 import { formatMinutes } from "@/lib/tasks";
 import { Card, ProgressBar } from "@/components/ui";
 import { DueLabel } from "@/components/due-label";
@@ -29,7 +30,7 @@ export default async function Dashboard() {
 
   await createRecurringTasksForToday();
 
-  const [todayTasks, overdueCount, projects, paths, streak, week, links] = await Promise.all([
+  const [todayTasks, overdueCount, projects, paths, streak, week, links, logged] = await Promise.all([
     db.task.findMany({ where: { date: todayDay }, include: taskInclude }),
     db.task.count({ where: { date: { lt: todayDay }, status: { not: "DONE" }, recurringTaskId: null } }),
     db.project.findMany({
@@ -46,6 +47,7 @@ export default async function Dashboard() {
     getStreak(),
     getThisWeek(),
     isAdmin ? getLinkGroups() : Promise.resolve({ projects: [], paths: [] }),
+    getTimeTotals({}),
   ]);
   const [projectProgress, pathProgress] = await Promise.all([
     getProjectProgress(projects.map((p) => p.id)),
@@ -96,7 +98,14 @@ export default async function Dashboard() {
         <Tile
           label="This week"
           value={`${week.total} done`}
-          note={week.minutes ? `about ${formatMinutes(week.minutes)} of planned time` : "tasks finished since Monday"}
+          note={
+            logged.week
+              ? `${formatMinutes(logged.week)} logged`
+              : week.minutes
+                ? `about ${formatMinutes(week.minutes)} of planned time`
+                : "tasks finished since Monday"
+          }
+          href={logged.week ? "/time" : undefined}
         />
       </div>
 
