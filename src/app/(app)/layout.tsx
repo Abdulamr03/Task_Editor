@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* On phones the links move to a second row under the app name. */}
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <span className="whitespace-nowrap font-bold">Task Editor</span>
-          <div className="order-last -mx-3 w-full overflow-x-auto sm:order-none sm:mx-0 sm:mr-auto sm:w-auto">
+          <div className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:mr-auto sm:w-auto">
             <NavLinks />
           </div>
           <div className="flex items-center gap-3 text-sm">

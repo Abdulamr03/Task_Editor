@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login, projects, learning paths, daily tasks, dashboard and time log done. PDF export comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login, projects, learning paths, daily tasks, dashboard, time log and PDF export done. Backup (JSON export / import) comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -123,6 +123,23 @@ Open **Time** in the top bar to record how long you actually spent on things.
 - Project and learning path pages show **Time spent** (in total and this week).
   The dashboard's **This week** tile shows the hours logged.
 
+## PDF export
+
+Open **Export** in the top bar.
+
+1. **Dates**: pick a preset (This week, Last week, This month, Last month,
+   Last 30 days, Today) or any From / To dates (up to one year).
+2. **What to include**: tick projects and learning paths (archived ones start
+   unticked; **All** / **None** help), and **Other tasks** for tasks without a link.
+3. **Sections**: Unfinished tasks, Completed work (tasks and learning steps
+   finished in the range), Progress, Time spent, Notes.
+4. **Download PDF**, or **Preview in a new tab** to look first.
+
+The report starts with summary numbers, then one part per project / learning
+path, with page numbers at the bottom. It uses the Noto Sans font (in `fonts/`,
+free under the SIL Open Font License), so accents, Greek and Cyrillic print
+correctly. Viewers can export too.
+
 ## Scripts
 
 | Command | What it does |
@@ -146,6 +163,9 @@ src/app/(app)/projects Projects list, new, detail and edit pages + save actions
 src/app/(app)/learning Learning paths and their steps
 src/app/(app)/tasks    Today / any day, recurring tasks, task actions
 src/app/(app)/time     Time log: log, week totals, entries
+src/app/(app)/export   Export page; export/pdf/route.ts makes the PDF
+src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
+fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
 src/components/        Shared UI pieces (cards, buttons, progress bar, nav, item form)

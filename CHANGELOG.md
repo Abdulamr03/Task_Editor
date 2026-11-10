@@ -5,6 +5,20 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — PDF export
+- **Export page** (`/export`, new **Export** link): date presets or any range
+  (up to a year), projects and learning paths to include (All / None; archived
+  ones start unticked), **Other tasks**, and sections: Unfinished tasks,
+  Completed work, Progress, Time spent, Notes. Clear messages if something's missing.
+- **PDF report** (`/export/pdf`, made on the server with `@react-pdf/renderer`):
+  summary tiles, then per project / learning path its status and due date,
+  progress bar, time logged, steps and tasks finished (with dates), unfinished
+  tasks (overdue in red) and notes; page numbers on every page. **Download** or
+  **Preview in a new tab**. The server checks the login and the options again.
+- **Noto Sans font** bundled in `fonts/` (SIL Open Font License) so accents,
+  Greek and Cyrillic print correctly; `next.config.ts` ships it with the PDF route.
+- **Top bar** links now wrap onto two lines on phones instead of being cut off.
+
 ### `feature` — Time log
 - **Time log page** (`/time`, new **Time** link): log time spent with date,
   duration, project / learning path and note. Durations can be typed as

@@ -9,12 +9,13 @@ const LINKS = [
   { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
   { href: "/time", label: "Time" },
+  { href: "/export", label: "Export" },
 ];
 
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav className="flex items-center gap-1 text-sm">
+    <nav className="flex flex-wrap items-center gap-1 text-sm">
       {LINKS.map((link) => {
         const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
         return (
