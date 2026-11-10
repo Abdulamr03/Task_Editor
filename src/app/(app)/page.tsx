@@ -42,7 +42,9 @@ export default async function Dashboard() {
       where: { status: "ACTIVE" },
       orderBy: { createdAt: "desc" },
       take: 6,
-      include: { steps: { where: { done: false }, orderBy: { order: "asc" }, take: 1, select: { title: true } } },
+      include: {
+        steps: { where: { done: false }, orderBy: [{ milestone: { order: "asc" } }, { order: "asc" }], take: 1, select: { title: true } },
+      },
     }),
     getStreak(),
     getThisWeek(),

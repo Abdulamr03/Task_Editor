@@ -1,5 +1,7 @@
 # Local PostgreSQL database for development.
 # Start: docker compose up -d   Stop: docker compose down
+# Reachable on your computer at localhost:5433 (not the usual 5432, so it
+# doesn't clash with other projects). Change it with DB_PORT in .env.
 services:
   db:
     image: postgres:16
@@ -9,7 +11,7 @@ services:
       POSTGRES_PASSWORD: task_editor
       POSTGRES_DB: task_editor
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - task_editor_db:/var/lib/postgresql/data
 

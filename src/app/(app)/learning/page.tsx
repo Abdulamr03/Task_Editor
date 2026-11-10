@@ -28,7 +28,12 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
     orderBy: { createdAt: "desc" },
     include: {
       // The next step still to do, shown on the card.
-      steps: { where: { done: false }, orderBy: { order: "asc" }, take: 1, select: { title: true } },
+      steps: {
+        where: { done: false },
+        orderBy: [{ milestone: { order: "asc" } }, { order: "asc" }],
+        take: 1,
+        select: { title: true },
+      },
     },
   });
   paths.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
@@ -40,9 +45,14 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
         title="Learning paths"
         actions={
           user.role === "ADMIN" && (
-            <Link href="/learning/new" className={buttonClass.primary}>
-              + New learning path
-            </Link>
+            <>
+              <Link href="/learning/import" className={buttonClass.secondary}>
+                📄 Import from PDF
+              </Link>
+              <Link href="/learning/new" className={buttonClass.primary}>
+                + New learning path
+              </Link>
+            </>
           )
         }
       />
