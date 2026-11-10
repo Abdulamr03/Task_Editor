@@ -5,6 +5,13 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `chore` — Own ports
+- The app now runs on **http://localhost:3300** (was 3000) and the Docker
+  database on **localhost:5433** (was 5432), so it doesn't clash with other
+  local projects. Override with `PORT=… npm run dev` and `DB_PORT` in `.env`.
+- **Update your `.env`**: change `localhost:5432` to `localhost:5433` in
+  `DATABASE_URL`, then run `docker compose up -d` once to move the database.
+
 ### `feature` — Import learning paths from PDF, with milestones
 - **Import from PDF** (`/learning/import`): upload a syllabus, textbook or notes
   (up to 24 MB / 600 pages, optional note). Claude Opus 5.5 reads it and

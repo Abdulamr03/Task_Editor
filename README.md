@@ -29,7 +29,7 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
    ```bash
    npm run db:migrate
    ```
-5. Start the app and open http://localhost:3000:
+5. Start the app and open http://localhost:3300:
    ```bash
    npm run dev
    ```
@@ -183,11 +183,20 @@ path, with page numbers at the bottom. It uses the Noto Sans font (in `fonts/`,
 free under the SIL Open Font License), so accents, Greek and Cyrillic print
 correctly. Viewers can export too.
 
+## Ports
+
+Task Editor uses its own ports so it can run next to other projects:
+
+| What | Address | Change it with |
+|---|---|---|
+| The app | http://localhost:3300 | `PORT=4000 npm run dev` |
+| The database (Docker) | localhost:5433 | `DB_PORT` in `.env`, plus the port in `DATABASE_URL` |
+
 ## Scripts
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Start the app in development mode |
+| `npm run dev` | Start the app in development mode (http://localhost:3300) |
 | `npm run build` / `npm start` | Build and run the production version |
 | `npm run lint` | Check code style |
 | `npm run typecheck` | Check TypeScript types |
