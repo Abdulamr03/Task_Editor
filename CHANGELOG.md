@@ -5,6 +5,18 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Time log
+- **Time log page** (`/time`, new **Time** link): log time spent with date,
+  duration, project / learning path and note. Durations can be typed as
+  `45`, `1h 30m`, `1h30`, `1.5h`, `1:30` (1 minute to 24 hours) or picked with
+  quick buttons; date and project stay filled in for the next entry.
+- **Week view** with ‹ This week ›: total time, and a bar per project /
+  learning path (biggest first, with time and share); entries grouped by day
+  with edit and delete.
+- **Time spent** card on project and learning path pages (total and this week).
+- **Dashboard**: the This week tile shows hours logged (falls back to planned time).
+- Shared project / learning path dropdown (`src/components/link-select.tsx`).
+
 ### `feature` — Dashboard
 - **Home page is now a dashboard**: greeting and date, then four tiles:
   Today (done / planned, time left), Overdue (red with ⚠ when any),

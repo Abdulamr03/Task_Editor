@@ -7,6 +7,8 @@ import { ItemActionsBar } from "@/components/item-actions-bar";
 import { deleteLearningPath, setLearningPathStatus } from "../actions";
 import { StepList } from "./steps";
 import { LinkedTasks } from "@/components/linked-tasks";
+import { TimeSpent } from "@/components/time-spent";
+import { getTimeTotals } from "@/lib/time-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
     include: { steps: { orderBy: { order: "asc" } } },
   });
   if (!path) notFound();
+  const time = await getTimeTotals({ learningPathId: id });
 
   const done = path.steps.filter((s) => s.done).length;
   const isAdmin = user.role === "ADMIN";
@@ -55,6 +58,8 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">Progress</h2>
         <ProgressBar done={done} total={path.steps.length} color={path.color} unit="steps" />
       </Card>
+
+      <TimeSpent total={time.total} week={time.week} color={path.color} />
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Steps</h2>

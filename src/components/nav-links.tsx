@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/tasks", label: "Today" },
   { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
+  { href: "/time", label: "Time" },
 ];
 
 export function NavLinks() {

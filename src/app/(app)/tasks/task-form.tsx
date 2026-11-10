@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { buttonClass, inputClass } from "@/components/ui";
 import { PRIORITIES, RULES, type LinkGroups } from "@/lib/tasks";
+import { LinkSelect } from "@/components/link-select";
 import type { TaskFormState } from "./actions";
 
 export type TaskFormValues = {
@@ -110,27 +111,7 @@ export function TaskForm({
             <input name="estimate" type="number" min={1} max={1440} step={1} defaultValue={v.estimate} placeholder="e.g. 30" className={inputClass} />
           </Field>
           <Field label="Project / learning path" wide={!showDate && !showRule}>
-            <select name="link" defaultValue={v.link} className={inputClass}>
-              <option value="">— None —</option>
-              {links.projects.length > 0 && (
-                <optgroup label="Projects">
-                  {links.projects.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {links.paths.length > 0 && (
-                <optgroup label="Learning paths">
-                  {links.paths.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
+            <LinkSelect links={links} defaultValue={v.link} />
           </Field>
         </div>
         <Field label="Notes (optional)">
