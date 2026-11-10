@@ -13,9 +13,10 @@ export const buttonClass = {
     "inline-flex items-center justify-center rounded-md border border-red-500/50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-500/10 dark:text-red-300",
 };
 
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+// `padded={false}` for cards whose rows have their own padding (lists).
+export function Card({ children, className = "", padded = true }: { children: React.ReactNode; className?: string; padded?: boolean }) {
   return (
-    <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
+    <div className={`rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 ${padded ? "p-5" : "overflow-hidden"} ${className}`}>
       {children}
     </div>
   );
@@ -60,7 +61,7 @@ export function ProgressBar({
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs text-slate-500">
-        <span>{total === 0 ? `No ${unit} yet` : `${done} of ${total} ${unit} done`}</span>
+        <span>{total === 0 ? `No ${unit} yet` : `${done} of ${total} ${total === 1 ? unit.replace(/s$/, "") : unit} done`}</span>
         <span>{percent}%</span>
       </div>
       <div

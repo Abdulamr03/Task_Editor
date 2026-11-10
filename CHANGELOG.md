@@ -5,6 +5,19 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Dashboard
+- **Home page is now a dashboard**: greeting and date, then four tiles:
+  Today (done / planned, time left), Overdue (red with ⚠ when any),
+  Streak (days in a row with a finished task or learning step) and
+  This week (tasks finished since Monday, planned time).
+- **To do today**: today's unfinished tasks, with the usual task buttons.
+- **Tasks done this week** chart: one bar per day, hover for the number,
+  click to open the day; a hidden table gives screen readers the same numbers.
+- **Active projects** (soonest due first) and **Learning** (next step), each
+  with progress bars; up to 6 of each.
+- Recurring tasks are also added when the dashboard is opened.
+- Fixed: lists inside cards had double padding; "1 of 1 tasks" now says "task".
+
 ### `feature` — Daily tasks, recurring tasks and carry over
 - **Today page** (`/tasks`): quick-add box (title, plus optional priority, time
   estimate in minutes, project / learning path, notes), a summary

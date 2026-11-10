@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login, projects, learning paths and daily tasks done. The dashboard comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login, projects, learning paths, daily tasks and dashboard done. The time log comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -46,6 +46,22 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
   npm run user:reset-password
   ```
   It asks for the email and a new password. The password is visible while you type it.
+
+## Dashboard (Home)
+
+The first page after logging in.
+
+- **Four tiles**:
+  - **Today**: tasks done out of tasks planned, and the time left.
+  - **Overdue**: unfinished tasks from earlier days (red when there are any).
+  - **Streak**: days in a row with at least one finished task or learning step.
+    Until you finish something today, it shows yesterday's streak so it doesn't
+    look broken in the morning.
+  - **This week**: tasks finished since Monday, and their planned time.
+- **To do today**: today's unfinished tasks; tick them off right here.
+- **Tasks done this week**: a bar per day, Monday to Sunday. Hover a bar to see
+  the number; click it to open that day.
+- **Active projects** and **Learning**: progress bars, due dates and the next step.
 
 ## Projects
 
@@ -125,6 +141,7 @@ src/lib/dates.ts       Date helpers (no time-zone shifts)
 src/lib/projects.ts    Project statuses, labels and colours
 src/lib/tasks.ts       Task priorities, repeat rules, time formatting
 src/lib/recurring.ts   Adds today's recurring tasks (once per day)
+src/lib/stats.ts       Dashboard numbers: streak, tasks done this week
 src/middleware.ts      Sends logged-out visitors to /login
 scripts/               Command-line helpers (password reset)
 docker-compose.yml     Local PostgreSQL
