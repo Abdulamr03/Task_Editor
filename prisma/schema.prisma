@@ -119,6 +119,8 @@ model Task {
 
   @@index([date])
   @@index([status])
+  // A recurring task creates at most one task per day.
+  @@unique([recurringTaskId, date])
 }
 
 model RecurringTask {
@@ -129,6 +131,9 @@ model RecurringTask {
   priority        Priority       @default(MEDIUM)
   estimateMinutes Int?
   active          Boolean        @default(true)
+  // The last day this template added its task to the list. Stops a task
+  // you deleted from coming back the same day.
+  lastCreatedOn   DateTime?      @db.Date
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 

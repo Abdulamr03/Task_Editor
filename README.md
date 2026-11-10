@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login, projects and learning paths done. Daily tasks come next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login, projects, learning paths and daily tasks done. The dashboard comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -74,6 +74,25 @@ split into steps you tick off.
 - **Archive / delete** work like projects. Deleting a path also deletes its steps.
 - Viewers see the steps but can't tick or change them.
 
+## Daily tasks
+
+Open **Today** in the top bar.
+
+- **Add a task** in the box at the top. Click **+ Priority, time, project…** to
+  set a priority, a time estimate in minutes, and a project or learning path.
+- **Tick the box** when it's done. **Start** marks it *in progress*.
+  **Tomorrow →** moves it to the next day. ✎ edits it (including its date), ✕ deletes it.
+- The top line shows how many are done and roughly how much time is left.
+- **‹ Today ›** and the date field show other days, past or future.
+- **Unfinished from earlier**: on Today, tasks left undone on past days are
+  listed in red. Move them one by one, or all at once with **Move all to today**.
+- **Recurring tasks** (button at the top right): tasks that repeat every day or
+  on weekdays. They're added to Today the first time you open it that day.
+  Pause one to stop it for a while. If you delete today's copy, it won't come
+  back until tomorrow. Missed days aren't carried over: each day gets its own copy.
+- Tasks linked to a project or learning path also appear on its page, and
+  count towards the project's progress bar.
+
 ## Scripts
 
 | Command | What it does |
@@ -95,6 +114,7 @@ prisma/migrations/     Database change history
 src/app/(app)/         Pages that need a login (layout with header + log out)
 src/app/(app)/projects Projects list, new, detail and edit pages + save actions
 src/app/(app)/learning Learning paths and their steps
+src/app/(app)/tasks    Today / any day, recurring tasks, task actions
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
 src/components/        Shared UI pieces (cards, buttons, progress bar, nav, item form)
@@ -103,6 +123,8 @@ src/lib/session.ts     Login cookie (signed, HTTP-only, 7 days)
 src/lib/auth.ts        Password hashing, requireUser / requireAdmin
 src/lib/dates.ts       Date helpers (no time-zone shifts)
 src/lib/projects.ts    Project statuses, labels and colours
+src/lib/tasks.ts       Task priorities, repeat rules, time formatting
+src/lib/recurring.ts   Adds today's recurring tasks (once per day)
 src/middleware.ts      Sends logged-out visitors to /login
 scripts/               Command-line helpers (password reset)
 docker-compose.yml     Local PostgreSQL

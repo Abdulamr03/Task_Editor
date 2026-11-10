@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { ItemActionsBar } from "@/components/item-actions-bar";
 import { deleteLearningPath, setLearningPathStatus } from "../actions";
 import { StepList } from "./steps";
+import { LinkedTasks } from "@/components/linked-tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,8 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
           }))}
         />
       </section>
+
+      <LinkedTasks where={{ learningPathId: id }} isAdmin={isAdmin} />
 
       {path.notes && (
         <Card>
