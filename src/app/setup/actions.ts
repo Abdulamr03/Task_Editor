@@ -33,6 +33,6 @@ export async function createAdmin(_state: FormState, formData: FormData): Promis
 
   if (!user) redirect("/login");
 
-  await createSession({ userId: user.id, role: user.role });
+  await createSession({ userId: user.id, role: user.role, v: user.sessionVersion });
   redirect("/");
 }

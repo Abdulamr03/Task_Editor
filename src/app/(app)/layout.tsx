@@ -1,10 +1,11 @@
 import { requireUser } from "@/lib/auth";
-import { logout } from "@/app/login/actions";
 import { NavLinks } from "@/components/nav-links";
+import { UserMenu } from "@/components/user-menu";
+import { getTheme } from "@/lib/theme";
 
 // Layout for every page that needs a logged-in user.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireUser();
+  const [user, theme] = await Promise.all([requireUser(), getTheme()]);
 
   return (
     <div className="min-h-screen">
@@ -15,17 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:mr-auto sm:w-auto">
             <NavLinks />
           </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="hidden text-slate-500 sm:inline">
-              {user.name}
-              {user.role === "VIEWER" && " (viewer)"}
-            </span>
-            <form action={logout}>
-              <button type="submit" className="whitespace-nowrap rounded-md border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800">
-                Log out
-              </button>
-            </form>
-          </div>
+          <UserMenu name={user.name} email={user.email} role={user.role} theme={theme} />
         </div>
       </header>
       <div className="mx-auto max-w-5xl px-4 py-8">{children}</div>
