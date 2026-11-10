@@ -11,6 +11,8 @@ const SESSION_DAYS = 7;
 export type SessionPayload = {
   userId: string;
   role: "ADMIN" | "VIEWER";
+  // The account's sessionVersion when this cookie was made.
+  v: number;
 };
 
 function getKey(): Uint8Array {
@@ -35,7 +37,7 @@ export async function verifySession(token: string | undefined): Promise<SessionP
     const { payload } = await jwtVerify(token, getKey(), { algorithms: ["HS256"] });
     if (typeof payload.userId !== "string") return null;
     if (payload.role !== "ADMIN" && payload.role !== "VIEWER") return null;
-    return { userId: payload.userId, role: payload.role };
+    return { userId: payload.userId, role: payload.role, v: typeof payload.v === "number" ? payload.v : 0 };
   } catch {
     return null;
   }

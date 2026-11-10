@@ -3,9 +3,12 @@ import { SESSION_COOKIE, verifySession } from "@/lib/session";
 
 // Pages anyone can open without logging in.
 const PUBLIC_PATHS = ["/login", "/setup"];
+// Always allowed, logged in or not.
+const OPEN_PATHS = ["/logout"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (OPEN_PATHS.includes(pathname)) return NextResponse.next();
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);

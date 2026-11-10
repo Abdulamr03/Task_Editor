@@ -17,18 +17,25 @@ export async function hasAnyUser(): Promise<boolean> {
   return (await db.user.count()) > 0;
 }
 
-// Returns the logged-in user, or sends the visitor to the login page.
-// Also checks the user still exists, so a deleted account loses access at once.
-export async function requireUser() {
+// The logged-in user, or null. Also null when the account was deleted, or its
+// password changed / "log out everywhere" was used after this cookie was made.
+export async function currentUser() {
   const session = await readSession();
-  if (!session) redirect("/login");
-
+  if (!session) return null;
   const user = await db.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, createdAt: true, sessionVersion: true },
   });
-  if (!user) redirect("/login");
+  if (!user || user.sessionVersion !== session.v) return null;
+  return user;
+}
 
+// Returns the logged-in user, or sends the visitor to the login page.
+// /logout clears an outdated cookie first (otherwise the middleware, which
+// can't see the database, would keep sending them back here).
+export async function requireUser() {
+  const user = await currentUser();
+  if (!user) redirect("/logout?reason=expired");
   return user;
 }
 

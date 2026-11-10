@@ -1,15 +1,38 @@
 @import "tailwindcss";
 
+/*
+  Appearance: <html data-theme="light" | "dark" | "system">, from Settings.
+  `dark:` styles apply when the theme is "dark", or when it's "system" and
+  the device is in dark mode.
+*/
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  color-scheme: light;
+}
+
+/* Dark colours; color-scheme also darkens date pickers, scrollbars and form controls. */
+:root[data-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root[data-theme="system"] {
     --background: #0f172a;
     --foreground: #e2e8f0;
-    /* Dark date pickers, scrollbars and form controls. */
     color-scheme: dark;
   }
 }

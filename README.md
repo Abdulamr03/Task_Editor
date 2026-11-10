@@ -41,11 +41,31 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
   This page stops working once an account exists.
 - **After that:** every page needs a login. Logging in keeps you signed in for
   7 days, or until you click **Log out**.
+- **Account menu**: click your initials at the top right for Settings,
+  Light / Dark / System, **Switch account** and **Log out**.
 - **Forgot your password?** Reset it from the terminal:
   ```bash
   npm run user:reset-password
   ```
   It asks for the email and a new password. The password is visible while you type it.
+
+## Settings
+
+Open it from the account menu (your initials, top right).
+
+- **Personal information**: change your name and the email you log in with;
+  see your role and since when you're a member.
+- **Appearance**: Light, Dark or System (follows your device). Applies at once
+  and is remembered in this browser. Also in the account menu.
+- **Password**: change it (needs the current one). Other devices are logged out.
+- **Accounts** (admins only): add accounts — e.g. a **viewer** who can look at
+  everything and export PDFs but not change anything — change roles, remove
+  accounts. There is always at least one admin.
+- **Log out**, **Switch account** (log out and log in as someone else) and
+  **Log out on all devices**.
+- **Delete my account** (asks for your password). The only admin can't delete
+  themselves while other accounts exist. The last account can choose to delete
+  all data too; the app then shows the Welcome page again.
 
 ## Dashboard (Home)
 
@@ -164,6 +184,9 @@ src/app/(app)/learning Learning paths and their steps
 src/app/(app)/tasks    Today / any day, recurring tasks, task actions
 src/app/(app)/time     Time log: log, week totals, entries
 src/app/(app)/export   Export page; export/pdf/route.ts makes the PDF
+src/app/(app)/settings Settings: profile, appearance, password, accounts, delete
+src/app/logout/        Clears the login cookie (also used by Switch account)
+src/lib/theme.ts       Light / dark / system setting (cookie)
 src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
 fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions

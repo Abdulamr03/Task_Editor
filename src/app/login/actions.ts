@@ -22,11 +22,11 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
   const ok = await checkPassword(password, user?.passwordHash ?? DUMMY_HASH);
   if (!user || !ok) return fail("Wrong email or password.");
 
-  await createSession({ userId: user.id, role: user.role });
+  await createSession({ userId: user.id, role: user.role, v: user.sessionVersion });
   redirect("/");
 }
 
 export async function logout(): Promise<void> {
   await deleteSession();
-  redirect("/login");
+  redirect("/login?reason=signed-out");
 }

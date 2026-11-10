@@ -1,7 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createElement } from "react";
-import { db } from "@/lib/db";
-import { readSession } from "@/lib/session";
+import { currentUser } from "@/lib/auth";
 import { parseDateInput, toDateInput } from "@/lib/dates";
 import { buildReport, SECTIONS, type SectionKey } from "@/lib/report/data";
 import { ReportDocument } from "@/lib/report/document";
@@ -12,8 +11,7 @@ export const runtime = "nodejs";
 // GET /export/pdf?from=YYYY-MM-DD&to=YYYY-MM-DD&project=<id>&path=<id>&unlinked=1&section=done…
 // Returns the PDF as a download. Admins and viewers can both export.
 export async function GET(request: Request) {
-  const session = await readSession();
-  const user = session && (await db.user.findUnique({ where: { id: session.userId }, select: { name: true } }));
+  const user = await currentUser();
   if (!user) return new Response("Please log in first.", { status: 401 });
 
   const q = new URL(request.url).searchParams;

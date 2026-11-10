@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTheme } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,13 +7,14 @@ export const metadata: Metadata = {
   description: "Track daily tasks, learning paths and projects.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getTheme();
   return (
-    <html lang="en">
+    <html lang="en" data-theme={theme}>
       <body className="antialiased">{children}</body>
     </html>
   );

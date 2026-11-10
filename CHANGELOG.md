@@ -5,6 +5,29 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Settings, account menu and appearance
+- **Account menu** in the top bar (your initials): name and email, Light /
+  Dark / System switch, Settings, Switch account, Log out.
+- **Settings page** (`/settings`):
+  - **Personal information**: edit name and email (checked for duplicates),
+    role and member-since date.
+  - **Appearance**: Light, Dark or System with small previews; applies at once,
+    saved in a cookie so pages load in the right colours with no flash.
+  - **Password**: change with the current password; other devices are logged out.
+  - **Accounts** (admins): add accounts (admin or read-only viewer), change
+    roles, remove accounts; at least one admin is always kept.
+  - **Log out**, **Switch account**, **Log out on all devices**.
+  - **Delete my account** with password; the only admin is protected; the last
+    account can also delete all data (the app returns to the Welcome page).
+- **Login security**: logins now carry a session number
+  (`User.sessionVersion`, migration `user_session_version`). Changing the
+  password or "log out on all devices" ends every other login.
+- **Fixed**: an outdated login (e.g. of a deleted account) could bounce between
+  pages; it now goes through `/logout` to the login page with a clear message.
+- **Login page** shows why you're there (logged out, switched, password changed…).
+- **Dark mode** is now driven by the Appearance setting (`data-theme` on
+  `<html>`); "System" follows the device as before.
+
 ### `feature` — PDF export
 - **Export page** (`/export`, new **Export** link): date presets or any range
   (up to a year), projects and learning paths to include (All / None; archived
