@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login and projects done. Learning paths and tasks come next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: setup, login, projects and learning paths done. Daily tasks come next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -61,6 +61,19 @@ Open **Projects** in the top bar.
   for good; its tasks are kept but no longer linked to a project.
 - Only admins see the edit buttons. Viewers can look but not change anything.
 
+## Learning paths
+
+Open **Learning** in the top bar. A learning path is a course, book or topic
+split into steps you tick off.
+
+- **New learning path**: name, description, status, colour, notes. Then add steps.
+- **Steps**: each has a title, an optional link (course page, video, PDF…) and
+  optional notes. Tick the box when it's done; the date is saved.
+  Use ↑ ↓ to reorder, ✎ to edit, ✕ to delete.
+- **Progress** is finished steps out of all steps. The list shows the next step to do.
+- **Archive / delete** work like projects. Deleting a path also deletes its steps.
+- Viewers see the steps but can't tick or change them.
+
 ## Scripts
 
 | Command | What it does |
@@ -81,9 +94,10 @@ prisma/schema.prisma   Database tables (see data model in docs/PLAN.md)
 prisma/migrations/     Database change history
 src/app/(app)/         Pages that need a login (layout with header + log out)
 src/app/(app)/projects Projects list, new, detail and edit pages + save actions
+src/app/(app)/learning Learning paths and their steps
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
-src/components/        Shared UI pieces (cards, buttons, progress bar, nav)
+src/components/        Shared UI pieces (cards, buttons, progress bar, nav, item form)
 src/lib/db.ts          Shared database client
 src/lib/session.ts     Login cookie (signed, HTTP-only, 7 days)
 src/lib/auth.ts        Password hashing, requireUser / requireAdmin

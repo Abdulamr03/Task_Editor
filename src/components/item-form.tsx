@@ -4,32 +4,40 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { inputClass, buttonClass } from "@/components/ui";
 import { PROJECT_COLORS, PROJECT_STATUSES } from "@/lib/projects";
-import type { ProjectFormState } from "./actions";
 
-export type ProjectFormValues = {
+// What a save action returns after an error: the message and what was typed.
+export type ItemFormState = { error?: string; values?: Record<string, string> } | undefined;
+
+export type ItemFormValues = {
   name: string;
   description: string;
   status: string;
   color: string;
-  startDate: string;
-  dueDate: string;
+  startDate?: string;
+  dueDate?: string;
   notes: string;
 };
 
-export function ProjectForm({
+// Form for creating or editing a project or a learning path.
+// Projects also have start and due dates (withDates).
+export function ItemForm({
   action,
   initial,
   submitLabel,
   cancelHref,
+  withDates = false,
+  descriptionHint,
 }: {
-  action: (state: ProjectFormState, formData: FormData) => Promise<ProjectFormState>;
-  initial: ProjectFormValues;
+  action: (state: ItemFormState, formData: FormData) => Promise<ItemFormState>;
+  initial: ItemFormValues;
   submitLabel: string;
   cancelHref: string;
+  withDates?: boolean;
+  descriptionHint: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   // After an error, show what was typed; otherwise the saved values.
-  const v = { ...initial, ...state?.values } as ProjectFormValues;
+  const v = { ...initial, ...state?.values } as ItemFormValues;
   const colors = PROJECT_COLORS.includes(v.color) ? PROJECT_COLORS : [...PROJECT_COLORS, v.color];
 
   return (
@@ -38,7 +46,7 @@ export function ProjectForm({
         <input name="name" defaultValue={v.name} required maxLength={100} className={inputClass} />
       </Field>
 
-      <Field label="Description" hint="One or two lines about the project.">
+      <Field label="Description" hint={descriptionHint}>
         <textarea name="description" defaultValue={v.description} rows={2} className={inputClass} />
       </Field>
 
@@ -52,12 +60,16 @@ export function ProjectForm({
             ))}
           </select>
         </Field>
-        <Field label="Start date">
-          <input type="date" name="startDate" defaultValue={v.startDate} className={inputClass} />
-        </Field>
-        <Field label="Due date">
-          <input type="date" name="dueDate" defaultValue={v.dueDate} className={inputClass} />
-        </Field>
+        {withDates && (
+          <>
+            <Field label="Start date">
+              <input type="date" name="startDate" defaultValue={v.startDate} className={inputClass} />
+            </Field>
+            <Field label="Due date">
+              <input type="date" name="dueDate" defaultValue={v.dueDate} className={inputClass} />
+            </Field>
+          </>
+        )}
       </div>
 
       <fieldset>

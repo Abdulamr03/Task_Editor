@@ -5,6 +5,20 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Learning paths
+- **Learning paths list** (`/learning`): cards with colour, status, description,
+  the next step to do and a progress bar. Same filters as projects.
+- **New / edit learning path**: name, description, status, colour, notes.
+- **Learning path page** (`/learning/<id>`): progress, notes and the **steps**
+  checklist, plus Edit, Archive / Unarchive and Delete (also deletes its steps).
+- **Steps**: add (form stays open for the next one), tick off (saves the date,
+  updates instantly), move up / down, edit, delete. Each step can have a link
+  (checked to be a web address; `example.com` becomes `https://example.com`) and notes.
+- **Top bar**: new Learning link; on phones the links move to a second row.
+- **Shared form and action buttons** for projects and learning paths
+  (`src/components/item-form.tsx`, `item-actions-bar.tsx`).
+- Project and learning path titles keep their colour dot on the same line on phones.
+
 ### `feature` — Projects
 - **Projects list** (`/projects`): cards with colour, status, description, due
   date and a progress bar. Filters: Current, Active, Paused, Done, Archived.

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/projects", label: "Projects" },
+  { href: "/learning", label: "Learning" },
 ];
 
 export function NavLinks() {
@@ -19,7 +20,7 @@ export function NavLinks() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`rounded-md px-3 py-1.5 ${
+            className={`whitespace-nowrap rounded-md px-3 py-1.5 ${
               active
                 ? "bg-slate-100 font-medium text-slate-900 dark:bg-slate-800 dark:text-slate-100"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
