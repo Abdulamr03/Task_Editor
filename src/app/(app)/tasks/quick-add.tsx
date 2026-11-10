@@ -8,7 +8,7 @@ import { TaskForm } from "./task-form";
 // The "Add a task…" box at the top of a day. Clears itself after each task.
 export function QuickAdd({ day, links }: { day: string; links: LinkGroups }) {
   return (
-    <Card className="p-4">
+    <Card padded={false} className="p-4">
       <TaskForm
         compact
         action={createTask}
