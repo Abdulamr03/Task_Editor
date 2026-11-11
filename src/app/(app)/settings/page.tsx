@@ -7,6 +7,7 @@ import { changePassword, createAccount, deleteOwnAccount, logoutEverywhere, upda
 import { ActionForm } from "./action-form";
 import { ThemePicker } from "./theme-picker";
 import { AccountsList, Avatar } from "./accounts";
+import { BackupSection } from "./backup-section";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,13 @@ export default async function SettingsPage() {
               </ActionForm>
             </div>
           </details>
+        </Section>
+      )}
+
+      {/* Backup */}
+      {isAdmin && (
+        <Section title="Backup" id="backup">
+          <BackupSection />
         </Section>
       )}
 

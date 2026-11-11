@@ -4,7 +4,7 @@ A personal web app to track daily tasks, learning paths and projects — with an
 admin login to edit everything from the browser, and PDF export of chosen
 tasks and progress.
 
-> Status: setup, login, projects, learning paths, daily tasks, dashboard, time log and PDF export done. Backup (JSON export / import) comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
+> Status: all planned features are done, including backup. The hosting guide comes next — see the [build order](docs/PLAN.md#build-order-one-labelled-pull-request-each).
 
 ## Run it locally
 
@@ -61,6 +61,10 @@ Open it from the account menu (your initials, top right).
 - **Accounts** (admins only): add accounts — e.g. a **viewer** who can look at
   everything and export PDFs but not change anything — change roles, remove
   accounts. There is always at least one admin.
+- **Backup** (admins only): **Download backup** saves all your data in one
+  `.json` file. **Restore from a backup** shows what the file holds next to what
+  you have now, then — after you tick "I understand" — replaces all data with
+  it. See [Backup](#backup) below.
 - **Log out**, **Switch account** (log out and log in as someone else) and
   **Log out on all devices**.
 - **Delete my account** (asks for your password). The only admin can't delete
@@ -183,6 +187,23 @@ path, with page numbers at the bottom. It uses the Noto Sans font (in `fonts/`,
 free under the SIL Open Font License), so accents, Greek and Cyrillic print
 correctly. Viewers can export too.
 
+## Backup
+
+**Settings → Backup.**
+
+- **Download backup** saves `task-editor-backup-<date>.json` with every
+  project, learning path, milestone, step, task, recurring task and time log
+  entry. **Accounts and passwords are not included**, so the file never holds
+  your login.
+- **Restore from a backup**: choose a file; the app checks it and shows a
+  "Now → After restore" table. Tick "I understand…" and click **Replace my data
+  with this backup**. Restoring is all-or-nothing: if anything fails, nothing
+  changes. Your accounts stay as they are.
+- Files from other apps, damaged files and files from a newer version are
+  refused with a clear message. Broken links inside a file (e.g. a task that
+  points at a project the file doesn't contain) are cleared, and the app says how many.
+- Tip: download a backup now and then, and before big changes.
+
 ## Ports
 
 Task Editor uses its own ports so it can run next to other projects:
@@ -220,6 +241,7 @@ src/app/(app)/export   Export page; export/pdf/route.ts makes the PDF
 src/app/(app)/settings Settings: profile, appearance, password, accounts, delete
 src/app/logout/        Clears the login cookie (also used by Switch account)
 src/lib/theme.ts       Light / dark / system setting (cookie)
+src/lib/backup.ts      Backup file: build, check and restore
 src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
 fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions

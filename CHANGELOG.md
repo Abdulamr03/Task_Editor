@@ -5,6 +5,21 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Backup (download and restore)
+- **Settings → Backup** (admins only).
+- **Download backup** (`GET /settings/backup`): one JSON file
+  (`task-editor-backup-<date>.json`, format version 1) with all projects,
+  learning paths, milestones, steps, recurring tasks, tasks and time logs.
+  Accounts and passwords are never included.
+- **Restore** (`POST /settings/backup/restore`): the file is checked first
+  (app, version, every field and value, duplicate ids) and a Now / After table
+  is shown; after confirming, all data is replaced in one transaction (all or
+  nothing). Accounts are kept, so you stay logged in. Broken links in a file are
+  cleared and counted. A restored backup matches the original exactly
+  (including "already covered" links and timestamps).
+- Clear messages for: not JSON, not a Task Editor backup, newer version,
+  invalid values, duplicate ids, files over 50 MB.
+
 ### `chore` — Own ports
 - The app now runs on **http://localhost:3300** (was 3000) and the Docker
   database on **localhost:5433** (was 5432), so it doesn't clash with other
