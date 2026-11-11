@@ -5,7 +5,7 @@ import type { TaskStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDateInput, today } from "@/lib/dates";
-import { isPriority, isRule, isTaskStatus } from "@/lib/tasks";
+import { isDifficulty, isPriority, isRule, isTaskStatus } from "@/lib/tasks";
 
 export type TaskFormState = { error?: string; values?: Record<string, string>; savedAt?: number } | undefined;
 
@@ -16,7 +16,7 @@ function refresh() {
   revalidatePath("/learning", "layout");
 }
 
-const FIELDS = ["title", "notes", "date", "priority", "estimate", "link", "rule"] as const;
+const FIELDS = ["title", "notes", "date", "priority", "estimate", "link", "rule", "difficulty"] as const;
 
 // Reads the shared task fields. `needDate` for tasks, `needRule` for recurring tasks.
 async function readForm(formData: FormData, { needDate = false, needRule = false } = {}) {
@@ -64,6 +64,8 @@ async function readForm(formData: FormData, { needDate = false, needRule = false
     ok: true as const,
     values,
     data: { title: values.title, notes: values.notes || null, priority: values.priority, estimateMinutes, projectId, learningPathId },
+    // Tasks only (recurring tasks have no difficulty).
+    difficulty: isDifficulty(values.difficulty) ? values.difficulty : null,
     date,
   };
 }
@@ -74,7 +76,7 @@ export async function createTask(_state: TaskFormState, formData: FormData): Pro
   await requireAdmin();
   const result = await readForm(formData, { needDate: true });
   if (!result.ok) return result.state;
-  await db.task.create({ data: { ...result.data, date: result.date! } });
+  await db.task.create({ data: { ...result.data, difficulty: result.difficulty, date: result.date! } });
   refresh();
   return { savedAt: Date.now() };
 }
@@ -83,7 +85,7 @@ export async function updateTask(id: string, _state: TaskFormState, formData: Fo
   await requireAdmin();
   const result = await readForm(formData, { needDate: true });
   if (!result.ok) return result.state;
-  const updated = await db.task.updateMany({ where: { id }, data: { ...result.data, date: result.date! } });
+  const updated = await db.task.updateMany({ where: { id }, data: { ...result.data, difficulty: result.difficulty, date: result.date! } });
   if (updated.count === 0) return { error: "This task no longer exists." };
   refresh();
   return { savedAt: Date.now() };

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { buttonClass, Card, inputClass } from "@/components/ui";
 import { PROJECT_COLORS } from "@/lib/projects";
-import { formatMinutes } from "@/lib/tasks";
+import { DIFFICULTY_LABEL, formatMinutes } from "@/lib/tasks";
 import type { Plan } from "@/lib/ai/pdf-plan";
 import { createPathFromPlan, type SavePlan } from "./actions";
 
@@ -182,7 +182,7 @@ function Review({ plan, covering, fileName, onBack }: { plan: Plan; covering: Co
         milestones: milestones.map((m) => ({
           title: m.title,
           description: m.description,
-          levels: m.levels.map(({ title, notes, estimateMinutes, pages, coveredBy, markDone }) => ({ title, notes, estimateMinutes, pages, coveredBy, markDone })),
+          levels: m.levels.map(({ title, notes, estimateMinutes, difficulty, pages, coveredBy, markDone }) => ({ title, notes, estimateMinutes, difficulty, pages, coveredBy, markDone })),
         })),
       });
       if (res?.error) setError(res.error);
@@ -261,6 +261,7 @@ function Review({ plan, covering, fileName, onBack }: { plan: Plan; covering: Co
                         />
                         <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 px-1 text-xs text-slate-500">
                           {l.estimateMinutes && <span>⏱ {formatMinutes(l.estimateMinutes)}</span>}
+                          {l.difficulty && <span>{DIFFICULTY_LABEL[l.difficulty]}</span>}
                           {l.pages && <span>📖 {l.pages}</span>}
                         </div>
                         {l.notes && <p className="mt-1 px-1 text-sm text-slate-500">{l.notes}</p>}

@@ -1,4 +1,4 @@
-import type { Priority, RecurrenceRule, TaskStatus } from "@prisma/client";
+import type { Difficulty, Priority, RecurrenceRule, TaskStatus } from "@prisma/client";
 
 // Labels and helpers for tasks. Safe to use in the browser (no database code).
 
@@ -47,4 +47,21 @@ export function linkValue(projectId: string | null, learningPathId: string | nul
   if (projectId) return `project:${projectId}`;
   if (learningPathId) return `path:${learningPathId}`;
   return "";
+}
+
+export const DIFFICULTIES: { value: Difficulty; label: string }[] = [
+  { value: "EASY", label: "Easy" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HARD", label: "Hard" },
+];
+
+// Short label with dots, readable without colour.
+export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  EASY: "●○○ Easy",
+  MEDIUM: "●●○ Medium",
+  HARD: "●●● Hard",
+};
+
+export function isDifficulty(v: string): v is Difficulty {
+  return v === "EASY" || v === "MEDIUM" || v === "HARD";
 }

@@ -12,6 +12,8 @@ const LABELS: Record<string, string> = {
   recurringTasks: "Recurring tasks",
   tasks: "Tasks",
   timeLogs: "Time log entries",
+  dayPlans: "Day plans",
+  plannerSettings: "Day planner settings",
 };
 
 // Download a backup, or restore one: check the file first, then confirm.
@@ -60,7 +62,8 @@ export function BackupSection() {
       <div>
         <h3 className="mb-1 font-medium">Download a backup</h3>
         <p className="mb-3 text-sm text-slate-500">
-          One file with all your projects, learning paths, milestones, steps, tasks, recurring tasks and time logs. Accounts and
+          One file with all your projects, learning paths, milestones, steps, tasks, recurring tasks, time logs, day plans and planner
+          settings. Accounts and
           passwords are not included. Keep it somewhere safe, like a cloud drive.
         </p>
         <a href="/settings/backup" className={buttonClass.primary} download>

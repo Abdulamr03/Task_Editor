@@ -13,11 +13,13 @@ type TaskWithLinks = Prisma.TaskGetPayload<{ include: typeof taskInclude }>;
 const STATUS_ORDER = { IN_PROGRESS: 0, TODO: 1, DONE: 2 } as const;
 const PRIORITY_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 } as const;
 
-// In progress first, then to do, then done; high priority first within each.
+// In progress first, then to do, then done; planned tasks by their time;
+// high priority first within each.
 export function sortTasks<T extends TaskWithLinks>(tasks: T[]): T[] {
   return [...tasks].sort(
     (a, b) =>
       STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+      (a.plannedStart ?? 9999) - (b.plannedStart ?? 9999) ||
       PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
       a.createdAt.getTime() - b.createdAt.getTime(),
   );
@@ -33,6 +35,8 @@ export function toTaskItem(t: TaskWithLinks): TaskItem {
     status: t.status,
     priority: t.priority,
     estimateMinutes: t.estimateMinutes,
+    difficulty: t.difficulty,
+    plannedStart: t.plannedStart,
     recurring: t.recurringTaskId !== null,
     project: t.project,
     learningPath: t.learningPath,

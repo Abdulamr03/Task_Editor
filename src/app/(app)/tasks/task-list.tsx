@@ -2,8 +2,9 @@
 
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
-import type { Priority, TaskStatus } from "@prisma/client";
-import { formatMinutes, linkValue, PRIORITY_STYLES, type LinkGroups } from "@/lib/tasks";
+import type { Difficulty, Priority, TaskStatus } from "@prisma/client";
+import { DIFFICULTY_LABEL, formatMinutes, linkValue, PRIORITY_STYLES, type LinkGroups } from "@/lib/tasks";
+import { toHHMM } from "@/lib/planner/time";
 import { deleteTask, moveTask, setTaskStatus, updateTask } from "./actions";
 import { TaskForm } from "./task-form";
 
@@ -15,6 +16,8 @@ export type TaskItem = {
   status: TaskStatus;
   priority: Priority;
   estimateMinutes: number | null;
+  difficulty: Difficulty | null;
+  plannedStart: number | null;
   recurring: boolean;
   project: { id: string; name: string; color: string } | null;
   learningPath: { id: string; title: string; color: string } | null;
@@ -84,6 +87,7 @@ function TaskRow({
             priority: task.priority,
             estimate: task.estimateMinutes ? String(task.estimateMinutes) : "",
             link: linkValue(task.project?.id ?? null, task.learningPath?.id ?? null),
+            difficulty: task.difficulty ?? "",
           }}
         />
       </li>
@@ -108,7 +112,10 @@ function TaskRow({
       />
       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
-          <p className={`font-medium ${done ? "text-slate-400 line-through" : ""}`}>{task.title}</p>
+          <p className={`font-medium ${done ? "text-slate-400 line-through" : ""}`}>
+            {task.plannedStart != null && <span className="mr-2 text-sm tabular-nums text-blue-600 dark:text-blue-400">{toHHMM(task.plannedStart)}</span>}
+            {task.title}
+          </p>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
             {status === "IN_PROGRESS" && <span className="rounded-full bg-blue-500/10 px-2 py-0.5 font-medium text-blue-700 dark:text-blue-300">In progress</span>}
             {task.priority !== "MEDIUM" && (
@@ -117,6 +124,7 @@ function TaskRow({
               </span>
             )}
             {task.estimateMinutes && <span>⏱ {formatMinutes(task.estimateMinutes)}</span>}
+            {task.difficulty && <span>{DIFFICULTY_LABEL[task.difficulty]}</span>}
             {linked && (
               <Link href={linked.href} className="inline-flex items-center gap-1 hover:underline">
                 <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: linked.color }} />

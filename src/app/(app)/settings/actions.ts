@@ -136,3 +136,52 @@ export async function deleteAccount(id: string): Promise<string | undefined> {
   await db.user.deleteMany({ where: { id } });
   revalidatePath("/settings");
 }
+
+// ---------- Day planner ----------
+
+const PLANNER_METHODS = ["Egyptian", "MuslimWorldLeague", "UmmAlQura", "Karachi", "Dubai", "Kuwait", "Qatar", "Turkey", "Singapore", "NorthAmerica", "MoonsightingCommittee", "Tehran"];
+
+function minutesFrom(fd: FormData, name: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(fd.get(name) ?? "").trim());
+  if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+
+export async function savePlannerSettings(_s: SettingsState, fd: FormData): Promise<SettingsState> {
+  await requireAdmin();
+  const dayStart = minutesFrom(fd, "dayStart");
+  const dayEnd = minutesFrom(fd, "dayEnd");
+  const lunchStart = minutesFrom(fd, "lunchStart");
+  const num = (name: string) => Number(fd.get(name));
+  const maxBlock = num("maxBlock"), breakMinutes = num("breakMinutes"), lunchMinutes = num("lunchMinutes"), prayerMinutes = num("prayerMinutes");
+  const latitude = num("latitude"), longitude = num("longitude");
+  const timeZone = field(fd, "timeZone");
+  const method = field(fd, "method");
+  const asrMethod = field(fd, "asrMethod") === "Hanafi" ? "Hanafi" : "Standard";
+  const locationName = field(fd, "locationName").slice(0, 80) || "My location";
+
+  if (dayStart === null || dayEnd === null) return fail("Enter the start and end of your working day.");
+  if (dayEnd - dayStart < 60) return fail("The working day must be at least an hour long.");
+  if (![30, 45, 60, 75, 90, 120].includes(maxBlock)) return fail("Choose a focus block length.");
+  if (![5, 10, 15, 20, 30].includes(breakMinutes)) return fail("Choose a break length.");
+  if (![0, 15, 30, 45, 60].includes(lunchMinutes)) return fail("Choose a lunch length.");
+  if (lunchMinutes > 0 && lunchStart === null) return fail("Enter a lunch time.");
+  if (![5, 10, 15, 20, 30].includes(prayerMinutes)) return fail("Choose how long to keep free for each prayer.");
+  if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180) {
+    return fail("Enter a valid latitude (−90 to 90) and longitude (−180 to 180).");
+  }
+  if (!PLANNER_METHODS.includes(method)) return fail("Choose a calculation method.");
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone });
+  } catch {
+    return fail("Choose a valid time zone.");
+  }
+
+  const data = {
+    dayStart, dayEnd, maxBlock, breakMinutes, lunchStart: lunchStart ?? 780, lunchMinutes,
+    prayersEnabled: fd.get("prayersEnabled") === "on", locationName, latitude, longitude, timeZone, method, asrMethod, prayerMinutes,
+  };
+  await db.plannerSettings.upsert({ where: { id: "default" }, create: { id: "default", ...data }, update: data });
+  revalidatePath("/", "layout");
+  return ok("Saved. New plans use these settings.");
+}

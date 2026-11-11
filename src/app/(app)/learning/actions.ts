@@ -6,6 +6,7 @@ import type { ProjectStatus } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { isProjectStatus } from "@/lib/projects";
+import { isDifficulty } from "@/lib/tasks";
 import type { ItemFormState } from "@/components/item-form";
 
 // ---------- Learning paths ----------
@@ -78,7 +79,7 @@ export async function deleteLearningPath(id: string): Promise<void> {
 
 export type StepFormState = { error?: string; values?: Record<string, string>; savedAt?: number } | undefined;
 
-const STEP_FIELDS = ["title", "resourceUrl", "notes"] as const;
+const STEP_FIELDS = ["title", "resourceUrl", "notes", "difficulty"] as const;
 
 function readStepForm(formData: FormData) {
   const values = Object.fromEntries(STEP_FIELDS.map((f) => [f, String(formData.get(f) ?? "").trim()]));
@@ -100,7 +101,8 @@ function readStepForm(formData: FormData) {
     }
   }
 
-  return { ok: true as const, data: { title: values.title, resourceUrl, notes: values.notes || null } };
+  const difficulty = isDifficulty(values.difficulty) ? values.difficulty : null;
+  return { ok: true as const, data: { title: values.title, resourceUrl, notes: values.notes || null, difficulty } };
 }
 
 export async function addStep(pathId: string, _state: StepFormState, formData: FormData): Promise<StepFormState> {
