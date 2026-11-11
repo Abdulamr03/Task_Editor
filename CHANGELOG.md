@@ -5,6 +5,35 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Plan my day (with prayer times) and difficulty
+- **Plan my day** on Today (`POST /tasks/plan` + review screen): Claude Opus 5.5
+  chooses what to work on today and for how long — overdue / today's tasks,
+  projects by deadline and open work, next learning-path levels — ordered hard
+  work first, easy work later, with a one-line summary. Structured output,
+  refusal fallback; ids are checked and unknown ones dropped.
+- **Placed on the clock by the app** (`src/lib/planner/pack.ts`): inside working
+  hours, around prayers and lunch, with a break after each focus block; long
+  items split into parts; sessions at least 25 minutes; what doesn't fit is
+  listed. The preview and the saved plan use the same code.
+- **Prayer times** calculated offline with `adhan` (Egyptian method by default;
+  12 methods; Standard or Hanafi Asr; any location and time zone).
+- **Review**: change minutes, difficulty, order and titles, remove items; then
+  **Use this plan** creates the day's project / study tasks, moves planned overdue
+  tasks to the day and sets start times. **Your plan** timeline on Today with a
+  Now marker and checkboxes; **Re-plan** (replaces, keeps finished work) and
+  **Clear plan**.
+- **Settings → Day planner**: hours, focus block, breaks, lunch, prayers
+  (location presets incl. Egyptian cities, coordinates, method, Asr, minutes,
+  time zone) with today's prayer times shown.
+- **Difficulty** (Easy / Medium / Hard) on tasks and learning-path levels, in
+  forms and lists; PDF import now proposes a difficulty per level.
+- Planned tasks show their start time and are sorted by it.
+- **Backup** now also includes day plans, planner settings, difficulty and
+  planned times (older backups still restore).
+- **Database migration** `day_planner`: `Difficulty` enum; `Task.difficulty`,
+  `plannedStart`, `fromPlan`; `LearningStep.difficulty`; `DayPlan` and
+  `PlannerSettings` tables. New package `adhan`.
+
 ### `feature` — Backup (download and restore)
 - **Settings → Backup** (admins only).
 - **Download backup** (`GET /settings/backup`): one JSON file

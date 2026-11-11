@@ -11,6 +11,12 @@ import { TaskList } from "./task-list";
 import { DayPicker } from "./day-picker";
 import { QuickAdd } from "./quick-add";
 import { CarryOverButton } from "./carry-over-button";
+import { PlannerPanel, SavedPlan } from "./plan/plan-view";
+import { hasApiKey } from "@/lib/ai/client";
+import { getPlannerSettings } from "@/lib/planner/settings";
+import { METHODS } from "@/lib/planner/prayers";
+import { minutesInZone, toHHMM } from "@/lib/planner/time";
+import type { Block } from "@/lib/planner/pack";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +33,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   // Today's recurring tasks appear the first time today is opened.
   if (isToday) await createRecurringTasksForToday();
 
-  const [dayTasks, overdue, links] = await Promise.all([
+  const [dayTasks, overdue, links, plan, planner] = await Promise.all([
     db.task.findMany({ where: { date: day }, include: taskInclude }),
     isToday
       ? db.task.findMany({
@@ -37,7 +43,18 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         })
       : Promise.resolve([]),
     isAdmin ? getLinkGroups() : Promise.resolve({ projects: [], paths: [] }),
+    db.dayPlan.findUnique({ where: { date: day } }),
+    getPlannerSettings(),
   ]);
+  const planBlocks = (plan?.blocks ?? []) as unknown as Block[];
+  const planStatus = Object.fromEntries(dayTasks.map((t) => [t.id, t.status]));
+  const canPlan = isAdmin && day >= todayDay;
+  const methodLabel = METHODS.find((m) => m.value === planner.method)?.label ?? planner.method;
+  const placeInfo =
+    `Working ${toHHMM(planner.dayStart)}–${toHHMM(planner.dayEnd)} · focus blocks up to ${planner.maxBlock} min with ${planner.breakMinutes}-min breaks` +
+    (planner.lunchMinutes ? ` · lunch ${toHHMM(planner.lunchStart)}` : "") +
+    (planner.prayersEnabled ? ` · prayer times for ${planner.locationName} (${methodLabel})` : "") +
+    ". Change these in Settings → Day planner.";
 
   const sorted = sortTasks(dayTasks);
   const open = sorted.filter((t) => t.status !== "DONE");
@@ -70,6 +87,22 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
         </p>
         <DayPicker day={dayText} todayDate={todayText} />
       </div>
+
+      {canPlan && (
+        <div className="flex flex-wrap gap-2">
+          <PlannerPanel day={dayText} hasKey={hasApiKey()} hasPlan={Boolean(plan)} placeInfo={placeInfo} />
+        </div>
+      )}
+      {plan && (
+        <SavedPlan
+          day={dayText}
+          blocks={planBlocks}
+          summary={plan.summary}
+          tasks={planStatus}
+          nowMinutes={isToday ? minutesInZone(new Date(), planner.timeZone) : null}
+          isAdmin={isAdmin}
+        />
+      )}
 
       {isAdmin && <QuickAdd day={dayText} links={links} />}
 

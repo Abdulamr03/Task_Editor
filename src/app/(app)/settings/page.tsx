@@ -3,7 +3,12 @@ import { requireUser, MIN_PASSWORD_LENGTH } from "@/lib/auth";
 import { getTheme } from "@/lib/theme";
 import { buttonClass, Card, inputClass, PageHeader } from "@/components/ui";
 import { logout } from "@/app/login/actions";
-import { changePassword, createAccount, deleteOwnAccount, logoutEverywhere, updateProfile } from "./actions";
+import { changePassword, createAccount, deleteOwnAccount, logoutEverywhere, savePlannerSettings, updateProfile } from "./actions";
+import { PlannerSettingsForm } from "./planner-settings";
+import { getPlannerSettings, LOCATIONS } from "@/lib/planner/settings";
+import { METHODS, prayerTimes } from "@/lib/planner/prayers";
+import { toHHMM } from "@/lib/planner/time";
+import { today } from "@/lib/dates";
 import { ActionForm } from "./action-form";
 import { ThemePicker } from "./theme-picker";
 import { AccountsList, Avatar } from "./accounts";
@@ -14,10 +19,15 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const me = await requireUser();
   const isAdmin = me.role === "ADMIN";
-  const [theme, accounts] = await Promise.all([
+  const [theme, accounts, planner] = await Promise.all([
     getTheme(),
     db.user.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, name: true, email: true, role: true, createdAt: true } }),
+    getPlannerSettings(),
   ]);
+  const todayPrayers =
+    `Today in ${planner.locationName}: ` + prayerTimes(planner, today()).map((p) => `${p.name} ${toHHMM(p.minutes)}`).join(" · ");
+  const timeZones = Intl.supportedValuesOf("timeZone");
+  if (!timeZones.includes(planner.timeZone)) timeZones.unshift(planner.timeZone);
   const others = accounts.length - 1;
   const since = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
@@ -104,6 +114,21 @@ export default async function SettingsPage() {
               </ActionForm>
             </div>
           </details>
+        </Section>
+      )}
+
+      {/* Day planner */}
+      {isAdmin && (
+        <Section title="Day planner" id="planner">
+          <p className="-mt-2 mb-4 text-sm text-slate-500">Used by “Plan my day” on Today. Prayer times are calculated on this computer; nothing is sent anywhere.</p>
+          <PlannerSettingsForm
+            action={savePlannerSettings}
+            values={planner}
+            locations={LOCATIONS}
+            methods={METHODS}
+            timeZones={timeZones}
+            todayPrayers={todayPrayers}
+          />
         </Section>
       )}
 

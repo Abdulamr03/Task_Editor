@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { buttonClass, inputClass } from "@/components/ui";
-import { PRIORITIES, RULES, type LinkGroups } from "@/lib/tasks";
+import { DIFFICULTIES, PRIORITIES, RULES, type LinkGroups } from "@/lib/tasks";
 import { LinkSelect } from "@/components/link-select";
 import type { TaskFormState } from "./actions";
 
@@ -14,6 +14,7 @@ export type TaskFormValues = {
   estimate: string;
   link: string;
   rule?: string;
+  difficulty?: string;
 };
 
 // One form for adding a task, editing a task and adding a recurring task.
@@ -81,7 +82,7 @@ export function TaskForm({
 
       {/* Kept in the page when hidden so their default values are still sent. */}
       <div className={more ? "flex flex-col gap-3" : "hidden"}>
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {showRule && (
             <Field label="Repeats">
               <select name="rule" defaultValue={v.rule} className={inputClass}>
@@ -107,10 +108,22 @@ export function TaskForm({
               ))}
             </select>
           </Field>
+          {!showRule && (
+            <Field label="Difficulty">
+              <select name="difficulty" defaultValue={v.difficulty ?? ""} className={inputClass}>
+                <option value="">— Not set —</option>
+                {DIFFICULTIES.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field label="Time (minutes)">
             <input name="estimate" type="number" min={1} max={1440} step={1} defaultValue={v.estimate} placeholder="e.g. 30" className={inputClass} />
           </Field>
-          <Field label="Project / learning path" wide={!showDate && !showRule}>
+          <Field label="Project / learning path" wide={showDate || showRule}>
             <LinkSelect links={links} defaultValue={v.link} />
           </Field>
         </div>

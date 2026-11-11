@@ -83,6 +83,7 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
             notes: s.notes,
             milestoneId: s.milestoneId,
             estimateMinutes: s.estimateMinutes,
+            difficulty: s.difficulty,
             pages: s.pages,
             coveredBy: s.coveredBy
               ? { title: s.coveredBy.title, pathId: s.coveredBy.learningPath.id, pathTitle: s.coveredBy.learningPath.title }

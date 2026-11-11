@@ -20,12 +20,15 @@ type FieldType =
   | "bool"
   | "date"
   | "date?"
-  | readonly string[]; // one of these values
+  | "number"
+  | "json"
+  | readonly (string | null)[]; // one of these values (null in the list = optional)
 
 const PROJECT_STATUS = ["ACTIVE", "PAUSED", "DONE", "ARCHIVED"] as const;
 const TASK_STATUS = ["TODO", "IN_PROGRESS", "DONE"] as const;
 const PRIORITY = ["LOW", "MEDIUM", "HIGH"] as const;
 const RULE = ["DAILY", "WEEKDAYS"] as const;
+const DIFFICULTY = ["EASY", "MEDIUM", "HARD", null] as const;
 
 const TABLES = {
   projects: {
@@ -42,7 +45,7 @@ const TABLES = {
   },
   learningSteps: {
     id: "id", learningPathId: "id", milestoneId: "id?", title: "string", order: "int", done: "bool",
-    doneAt: "date?", resourceUrl: "string?", notes: "string?", estimateMinutes: "int?", pages: "string?",
+    doneAt: "date?", resourceUrl: "string?", notes: "string?", estimateMinutes: "int?", difficulty: DIFFICULTY, pages: "string?",
     coveredById: "id?", createdAt: "date", updatedAt: "date",
   },
   recurringTasks: {
@@ -51,11 +54,18 @@ const TABLES = {
   },
   tasks: {
     id: "id", title: "string", notes: "string?", date: "date", status: TASK_STATUS, priority: PRIORITY,
-    estimateMinutes: "int?", completedAt: "date?", projectId: "id?", learningPathId: "id?", recurringTaskId: "id?",
+    estimateMinutes: "int?", difficulty: DIFFICULTY, plannedStart: "int?", fromPlan: "bool", completedAt: "date?",
+    projectId: "id?", learningPathId: "id?", recurringTaskId: "id?",
     createdAt: "date", updatedAt: "date",
   },
   timeLogs: {
     id: "id", date: "date", minutes: "int", note: "string?", projectId: "id?", learningPathId: "id?", createdAt: "date",
+  },
+  dayPlans: { id: "id", date: "date", blocks: "json", summary: "string?", createdAt: "date", updatedAt: "date" },
+  plannerSettings: {
+    id: "id", dayStart: "int", dayEnd: "int", maxBlock: "int", breakMinutes: "int", lunchStart: "int", lunchMinutes: "int",
+    prayersEnabled: "bool", locationName: "string", latitude: "number", longitude: "number", timeZone: "string",
+    method: "string", asrMethod: "string", prayerMinutes: "int", updatedAt: "date",
   },
 } as const satisfies Record<string, Record<string, FieldType>>;
 
@@ -68,6 +78,8 @@ export const TABLE_LABELS: Record<TableName, string> = {
   recurringTasks: "Recurring tasks",
   tasks: "Tasks",
   timeLogs: "Time log entries",
+  dayPlans: "Day plans",
+  plannerSettings: "Day planner settings",
 };
 const TABLE_NAMES = Object.keys(TABLES) as TableName[];
 
@@ -80,7 +92,7 @@ export type Counts = Record<TableName, number>;
 const selectOf = (table: TableName) => Object.fromEntries(Object.keys(TABLES[table]).map((f) => [f, true]));
 
 export async function buildBackup() {
-  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs] = await Promise.all([
+  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings] = await Promise.all([
     db.project.findMany({ select: selectOf("projects"), orderBy: { createdAt: "asc" } }),
     db.learningPath.findMany({ select: selectOf("learningPaths"), orderBy: { createdAt: "asc" } }),
     db.milestone.findMany({ select: selectOf("milestones"), orderBy: [{ learningPathId: "asc" }, { order: "asc" }] }),
@@ -88,18 +100,20 @@ export async function buildBackup() {
     db.recurringTask.findMany({ select: selectOf("recurringTasks"), orderBy: { createdAt: "asc" } }),
     db.task.findMany({ select: selectOf("tasks"), orderBy: [{ date: "asc" }, { createdAt: "asc" }] }),
     db.timeLog.findMany({ select: selectOf("timeLogs"), orderBy: [{ date: "asc" }, { createdAt: "asc" }] }),
+    db.dayPlan.findMany({ select: selectOf("dayPlans"), orderBy: { date: "asc" } }),
+    db.plannerSettings.findMany({ select: selectOf("plannerSettings") }),
   ]);
   return {
     app: BACKUP_APP,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     note: "Task Editor backup. Accounts and passwords are not included.",
-    data: { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs },
+    data: { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings },
   };
 }
 
 export async function currentCounts(): Promise<Counts> {
-  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs] = await Promise.all([
+  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings] = await Promise.all([
     db.project.count(),
     db.learningPath.count(),
     db.milestone.count(),
@@ -107,8 +121,10 @@ export async function currentCounts(): Promise<Counts> {
     db.recurringTask.count(),
     db.task.count(),
     db.timeLog.count(),
+    db.dayPlan.count(),
+    db.plannerSettings.count(),
   ]);
-  return { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs };
+  return { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings };
 }
 
 // ---------- Checking a backup file ----------
@@ -198,6 +214,27 @@ export function parseBackup(raw: unknown): ParsedBackup {
     } else perDay.add(key);
   }
 
+  // Day plans: clear links to tasks that aren't in the file; only one settings row.
+  const taskIds = ids("tasks");
+  for (const plan of data.dayPlans) {
+    if (!Array.isArray(plan.blocks)) {
+      plan.blocks = [];
+      fixes++;
+      continue;
+    }
+    for (const b of plan.blocks as Record<string, unknown>[]) {
+      if (b && typeof b === "object" && typeof b.taskId === "string" && !taskIds.has(b.taskId)) {
+        b.taskId = null;
+        fixes++;
+      }
+    }
+  }
+  if (data.plannerSettings.length > 1) {
+    fixes += data.plannerSettings.length - 1;
+    data.plannerSettings = data.plannerSettings.slice(0, 1);
+  }
+  data.plannerSettings.forEach((r) => (r.id = "default"));
+
   const counts = Object.fromEntries(TABLE_NAMES.map((t) => [t, data[t].length])) as Counts;
   return { exportedAt: typeof file.exportedAt === "string" ? file.exportedAt : null, data, counts, fixes };
 }
@@ -209,7 +246,7 @@ function cleanRow(table: TableName, row: unknown, index: number): Row {
   for (const [field, type] of Object.entries(TABLES[table]) as [string, FieldType][]) {
     const v = r[field];
     const where = `${TABLE_LABELS[table]} #${index + 1}, “${field}”`;
-    const optional = typeof type === "string" && type.endsWith("?");
+    const optional = (typeof type === "string" && type.endsWith("?")) || (Array.isArray(type) && type.includes(null));
     if (v === undefined || v === null) {
       if (optional) {
         out[field] = null;
@@ -227,6 +264,12 @@ function cleanRow(table: TableName, row: unknown, index: number): Row {
     }
     if (Array.isArray(type)) {
       if (!type.includes(v as string)) throw new BackupError(`${where} has an unknown value.`);
+      out[field] = v;
+    } else if (type === "number") {
+      if (typeof v !== "number" || !Number.isFinite(v)) throw new BackupError(`${where} should be a number.`);
+      out[field] = v;
+    } else if (type === "json") {
+      if (JSON.stringify(v).length > 200000) throw new BackupError(`${where} is too large.`);
       out[field] = v;
     } else if (type === "id" || type === "id?") {
       if (typeof v !== "string" || !/^[A-Za-z0-9_-]{1,64}$/.test(v)) throw new BackupError(`${where} isn't a valid id.`);
@@ -258,6 +301,8 @@ export async function restoreBackup(data: BackupData): Promise<void> {
   await db.$transaction(
     async (tx) => {
       // Delete in an order that respects the links.
+      await tx.dayPlan.deleteMany();
+      await tx.plannerSettings.deleteMany();
       await tx.timeLog.deleteMany();
       await tx.task.deleteMany();
       await tx.recurringTask.deleteMany();
@@ -286,6 +331,8 @@ export async function restoreBackup(data: BackupData): Promise<void> {
       await tx.recurringTask.createMany({ data: data.recurringTasks as unknown as Prisma.RecurringTaskCreateManyInput[] });
       await tx.task.createMany({ data: data.tasks as unknown as Prisma.TaskCreateManyInput[] });
       await tx.timeLog.createMany({ data: data.timeLogs as unknown as Prisma.TimeLogCreateManyInput[] });
+      await tx.dayPlan.createMany({ data: data.dayPlans as unknown as Prisma.DayPlanCreateManyInput[] });
+      await tx.plannerSettings.createMany({ data: data.plannerSettings as unknown as Prisma.PlannerSettingsCreateManyInput[] });
     },
     { timeout: 120_000, maxWait: 10_000 },
   );

@@ -7,7 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { cleanPlan } from "@/lib/ai/pdf-plan";
 import { PROJECT_COLORS } from "@/lib/projects";
 
-type SaveLevel = { title: string; notes: string | null; estimateMinutes: number | null; pages: string | null; coveredBy: string | null; markDone: boolean };
+type SaveLevel = { title: string; notes: string | null; estimateMinutes: number | null; difficulty: "EASY" | "MEDIUM" | "HARD" | null; pages: string | null; coveredBy: string | null; markDone: boolean };
 type SaveMilestone = { title: string; description: string | null; levels: SaveLevel[] };
 export type SavePlan = { title: string; description: string | null; color: string; fileName: string; milestones: SaveMilestone[] };
 
@@ -54,6 +54,7 @@ export async function createPathFromPlan(input: SavePlan): Promise<{ error: stri
             title: l.title,
             notes: l.notes,
             estimateMinutes: l.estimateMinutes,
+            difficulty: l.difficulty,
             pages: l.pages,
             coveredById: l.coveredBy,
             order: ++order,

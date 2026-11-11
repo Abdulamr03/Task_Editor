@@ -39,6 +39,12 @@ enum RecurrenceRule {
   WEEKDAYS
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -117,6 +123,7 @@ model LearningStep {
   resourceUrl     String?
   notes           String?
   estimateMinutes Int?
+  difficulty      Difficulty?
   // Where it is in the source, e.g. "pp. 12–20" (from PDF import).
   pages           String?
   // An earlier step that already covered this one (found by PDF import).
@@ -138,6 +145,11 @@ model Task {
   status          TaskStatus @default(TODO)
   priority        Priority   @default(MEDIUM)
   estimateMinutes Int?
+  difficulty      Difficulty?
+  // Set by "Plan my day": start time in minutes after midnight (540 = 09:00).
+  plannedStart    Int?
+  // Created by "Plan my day" (removed again if you re-plan and it isn't done).
+  fromPlan        Boolean    @default(false)
   completedAt     DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -190,4 +202,35 @@ model TimeLog {
   learningPath   LearningPath? @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
 
   @@index([date])
+}
+
+// A day's schedule from "Plan my day": the timed blocks (work, breaks,
+// prayers, lunch) as JSON. One per day.
+model DayPlan {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  blocks    Json
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Settings for "Plan my day" (one row, id "default"). Times are minutes after midnight.
+model PlannerSettings {
+  id             String   @id @default("default")
+  dayStart       Int      @default(540)
+  dayEnd         Int      @default(1020)
+  maxBlock       Int      @default(90)
+  breakMinutes   Int      @default(15)
+  lunchStart     Int      @default(780)
+  lunchMinutes   Int      @default(30)
+  prayersEnabled Boolean  @default(true)
+  locationName   String   @default("Cairo")
+  latitude       Float    @default(30.0444)
+  longitude      Float    @default(31.2357)
+  timeZone       String   @default("Africa/Cairo")
+  method         String   @default("Egyptian")
+  asrMethod      String   @default("Standard")
+  prayerMinutes  Int      @default(15)
+  updatedAt      DateTime @updatedAt
 }

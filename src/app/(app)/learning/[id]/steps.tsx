@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useOptimistic, useState, useTransition } from "react";
 import { buttonClass, inputClass } from "@/components/ui";
 import Link from "next/link";
-import { formatMinutes } from "@/lib/tasks";
+import { DIFFICULTIES, DIFFICULTY_LABEL, formatMinutes } from "@/lib/tasks";
 import {
   addMilestone,
   addStep,
@@ -26,6 +26,7 @@ export type StepItem = {
   notes: string | null;
   milestoneId: string | null;
   estimateMinutes: number | null;
+  difficulty: "EASY" | "MEDIUM" | "HARD" | null;
   pages: string | null;
   // The earlier step that already covered this one.
   coveredBy: { title: string; pathId: string; pathTitle: string } | null;
@@ -280,7 +281,7 @@ function StepRow({
       <li className="p-4">
         <StepForm
           action={updateStep.bind(null, step.id)}
-          initial={{ title: step.title, resourceUrl: step.resourceUrl ?? "", notes: step.notes ?? "" }}
+          initial={{ title: step.title, resourceUrl: step.resourceUrl ?? "", notes: step.notes ?? "", difficulty: step.difficulty ?? "" }}
           submitLabel="Save step"
           onSaved={() => setEditing(false)}
           onCancel={() => setEditing(false)}
@@ -322,9 +323,10 @@ function StepRow({
             {prettyUrl(step.resourceUrl)} ↗
           </a>
         )}
-        {(step.estimateMinutes || step.pages) && (
+        {(step.estimateMinutes || step.pages || step.difficulty) && (
           <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-slate-500">
             {step.estimateMinutes && <span>⏱ {formatMinutes(step.estimateMinutes)}</span>}
+            {step.difficulty && <span>{DIFFICULTY_LABEL[step.difficulty]}</span>}
             {step.pages && <span>📖 {step.pages}</span>}
           </p>
         )}
@@ -385,7 +387,7 @@ function AddStepForm({ pathId, milestoneId, label = "+ Add step" }: { pathId: st
         key={formKey}
         action={addStep.bind(null, pathId)}
         milestoneId={milestoneId}
-        initial={{ title: "", resourceUrl: "", notes: "" }}
+        initial={{ title: "", resourceUrl: "", notes: "", difficulty: "" }}
         submitLabel="Add step"
         // Stay open with an empty form, ready for the next step.
         onSaved={() => setFormKey((k) => k + 1)}
@@ -407,7 +409,7 @@ function StepForm({
 }: {
   milestoneId?: string;
   action: (state: StepFormState, formData: FormData) => Promise<StepFormState>;
-  initial: { title: string; resourceUrl: string; notes: string };
+  initial: { title: string; resourceUrl: string; notes: string; difficulty: string };
   submitLabel: string;
   onSaved: () => void;
   onCancel: () => void;
@@ -432,6 +434,17 @@ function StepForm({
       <label className="flex flex-col gap-1 text-sm font-medium">
         Link <span className="text-xs font-normal text-slate-500">(optional) course page, video, PDF…</span>
         <input name="resourceUrl" defaultValue={v.resourceUrl} inputMode="url" className={inputClass} placeholder="https://" />
+      </label>
+      <label className="flex flex-col gap-1 text-sm font-medium">
+        Difficulty <span className="text-xs font-normal text-slate-500">(optional — helps “Plan my day”)</span>
+        <select name="difficulty" defaultValue={v.difficulty} className={inputClass}>
+          <option value="">— Not set —</option>
+          {DIFFICULTIES.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium">
         Notes <span className="text-xs font-normal text-slate-500">(optional)</span>

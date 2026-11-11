@@ -155,6 +155,38 @@ Open **Today** in the top bar.
   back until tomorrow. Missed days aren't carried over: each day gets its own copy.
 - Tasks linked to a project or learning path also appear on its page, and
   count towards the project's progress bar.
+- **Difficulty** (Easy / Medium / Hard) can be set on tasks and learning-path
+  levels; "Plan my day" uses it.
+
+### Plan my day
+
+**Today → 🗓 Plan my day** builds a timed schedule for your working hours
+(9:00–17:00 by default) with Claude (needs `ANTHROPIC_API_KEY`, like PDF import;
+about a cent per plan).
+
+1. Optionally add a note ("focus on the thesis", "keep the afternoon light").
+2. **Make my plan**: Claude looks at today's and overdue tasks, project deadlines
+   and open work, and the next levels of your learning paths (with time
+   estimates and difficulty), and picks what to do and for how long — hard,
+   deep work in the morning, lighter work later, learning most days.
+3. The app places it on the clock itself: around **prayer times** (calculated
+   on your computer), **lunch** and a **break** after each focus block, all
+   inside your hours, never overlapping. Long items are split into parts.
+4. Review: change lengths (− / +), difficulty, order (↑ ↓), titles, or remove
+   items — the timeline updates as you go. **Use this plan**.
+5. Today shows **Your plan** as a timeline with a **Now** marker; tick blocks as
+   you finish them. Planned tasks show their start time in the list.
+   **Re-plan** replaces the plan (finished work is kept); **Clear plan** removes it.
+
+Project and study blocks become tasks for that day (linked to the project or
+learning path); overdue tasks in the plan move to that day.
+
+**Settings → Day planner**: working hours, longest focus block, break length,
+lunch time and length, and prayers — on/off, location (Egyptian cities and
+others, or any coordinates), calculation method (Egyptian by default, plus
+Muslim World League, Umm al-Qura, Karachi, ISNA and more), Asr (Standard or
+Hanafi), minutes kept free per prayer, and time zone. Today's prayer times are
+shown as a check.
 
 ## Time log
 
@@ -242,6 +274,8 @@ src/app/(app)/settings Settings: profile, appearance, password, accounts, delete
 src/app/logout/        Clears the login cookie (also used by Switch account)
 src/lib/theme.ts       Light / dark / system setting (cookie)
 src/lib/backup.ts      Backup file: build, check and restore
+src/lib/planner/       Day planner: prayer times, packing blocks on the clock, settings
+src/lib/ai/            Claude requests: client.ts (shared), pdf-plan.ts, day-plan.ts
 src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
 fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions
