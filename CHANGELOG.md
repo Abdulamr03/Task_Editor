@@ -5,6 +5,19 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Plan my day starts from now
+- On **today**, "Plan my day" now plans from the time you press the button
+  (rounded up to 5 minutes) until the end of your working day; before the day
+  starts it still plans the whole day. A **Start from now (HH:MM)** checkbox
+  (on by default, reset each time) lets you plan the whole day instead. Other
+  days are unchanged.
+- Claude is told the current time and only the time that's left; prayers and
+  lunch already past are left out, and capacity is the remaining time.
+- **Re-planning later in the day keeps what's behind you**: finished blocks,
+  breaks and prayers before the new start stay in the timeline; unfinished past
+  blocks are dropped.
+- After the working day has ended, the planner says so and links to tomorrow.
+
 ### `feature` — Plan my day (with prayer times) and difficulty
 - **Plan my day** on Today (`POST /tasks/plan` + review screen): Claude Opus 5.5
   chooses what to work on today and for how long — overdue / today's tasks,

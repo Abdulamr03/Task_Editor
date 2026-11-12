@@ -137,6 +137,7 @@ export async function planDay(options: {
   dayStart: string;
   dayEnd: string;
   fixedSummary: string;
+  startsNow?: boolean;
   note: string;
 }): Promise<{ summary: string; items: PlanItem[] }> {
   const { candidates } = options;
@@ -152,7 +153,10 @@ export async function planDay(options: {
       {
         type: "text",
         text:
-          `Day to plan: ${dayName}${isToday ? " (today)" : ""}. Working hours ${options.dayStart}–${options.dayEnd}.\n` +
+          `Day to plan: ${dayName}${isToday ? " (today)" : ""}. ` +
+          (options.startsNow
+            ? `It is now ${options.dayStart}: plan the rest of the working day, ${options.dayStart}–${options.dayEnd}. Earlier hours are over.\n`
+            : `Working hours ${options.dayStart}–${options.dayEnd}.\n`) +
           `Fixed blocks the app keeps free: ${options.fixedSummary || "none"}.\n` +
           `Available work time after fixed blocks and breaks: about ${options.capacityMinutes} minutes.\n\n` +
           `Tasks (JSON):\n${JSON.stringify(candidates.tasks)}\n\n` +
