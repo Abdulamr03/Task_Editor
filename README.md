@@ -164,7 +164,12 @@ Open **Today** in the top bar.
 (9:00–17:00 by default) with Claude (needs `ANTHROPIC_API_KEY`, like PDF import;
 about a cent per plan).
 
-1. Optionally add a note ("focus on the thesis", "keep the afternoon light").
+1. **Today, it plans from now**: pressing the button at 13:40 plans 13:40 until
+   the end of your working day (before your day starts, it plans the whole day).
+   Untick **Start from now** to plan the whole day instead. Other days always
+   use the whole working day. After your working day has ended, it offers to
+   plan tomorrow.
+   Optionally add a note ("focus on the thesis", "keep the afternoon light").
 2. **Make my plan**: Claude looks at today's and overdue tasks, project deadlines
    and open work, and the next levels of your learning paths (with time
    estimates and difficulty), and picks what to do and for how long — hard,
@@ -176,7 +181,9 @@ about a cent per plan).
    items — the timeline updates as you go. **Use this plan**.
 5. Today shows **Your plan** as a timeline with a **Now** marker; tick blocks as
    you finish them. Planned tasks show their start time in the list.
-   **Re-plan** replaces the plan (finished work is kept); **Clear plan** removes it.
+   **Re-plan** replaces the plan (finished work is kept); re-planning later in
+   the day keeps the morning's finished blocks, breaks and prayers in the
+   timeline. **Clear plan** removes it.
 
 Project and study blocks become tasks for that day (linked to the project or
 learning path); overdue tasks in the plan move to that day.

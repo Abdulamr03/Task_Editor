@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDateInput, today } from "@/lib/dates";
 import { dayFrame } from "@/lib/planner/day";
+import { getPlannerSettings } from "@/lib/planner/settings";
 import { pack, type Block, type PlanItem } from "@/lib/planner/pack";
 
 function refresh() {
@@ -22,7 +23,13 @@ async function clearDay(tx: Prisma.TransactionClient, day: Date) {
 // Saves the reviewed plan: places it on the clock again (same rules as the
 // preview), creates tasks for project and study blocks, and gives every planned
 // task its start time.
-export async function savePlan(input: { date: string; summary: string; items: PlanItem[] }): Promise<{ error: string } | { ok: true; unplaced: number }> {
+export async function savePlan(input: {
+  date: string;
+  summary: string;
+  items: PlanItem[];
+  // Start of the planned time (the preview's), e.g. "now" on today.
+  startAt?: number;
+}): Promise<{ error: string } | { ok: true; unplaced: number }> {
   await requireAdmin();
   const day = parseDateInput(input.date);
   if (!day || day === "invalid" || day < today()) return { error: "Choose today or a later day." };
@@ -56,8 +63,24 @@ export async function savePlan(input: { date: string; summary: string; items: Pl
   });
   if (clean.length === 0) return { error: "The plan is empty." };
 
-  const frame = await dayFrame(day);
+  // Only today can start later than the working day (from "now").
+  const settings = await getPlannerSettings();
+  const isToday = day.getTime() === today().getTime();
+  const startAt = isToday && Number.isInteger(input.startAt) ? (input.startAt as number) : null;
+  const frame = await dayFrame(day, startAt);
   const { blocks, unplaced } = pack(clean, frame.fixed, frame.shape);
+
+  // Re-planning later in the day keeps what's already behind you: finished
+  // blocks, breaks and prayers before the new start.
+  let past: Block[] = [];
+  if (frame.shape.dayStart > settings.dayStart) {
+    const previous = await db.dayPlan.findUnique({ where: { date: day } });
+    const oldBlocks = (previous?.blocks ?? []) as unknown as Block[];
+    const doneIds = new Set(
+      (await db.task.findMany({ where: { id: { in: oldBlocks.map((b) => b.taskId).filter((x): x is string => Boolean(x)) }, status: "DONE" }, select: { id: true } })).map((t) => t.id),
+    );
+    past = oldBlocks.filter((b) => b.end <= frame.shape.dayStart && (b.kind !== "work" || (b.taskId != null && doneIds.has(b.taskId))));
+  }
 
   await db.$transaction(async (tx) => {
     await clearDay(tx, day);
@@ -92,7 +115,10 @@ export async function savePlan(input: { date: string; summary: string; items: Pl
         taskFor.set(item.key, created.id);
       }
     }
-    const saved: Block[] = blocks.map((b) => (b.kind === "work" && b.itemKey ? { ...b, taskId: taskFor.get(b.itemKey) ?? null } : b));
+    const saved: Block[] = [
+      ...past,
+      ...blocks.map((b) => (b.kind === "work" && b.itemKey ? { ...b, taskId: taskFor.get(b.itemKey) ?? null } : b)),
+    ].sort((a, b) => a.start - b.start);
     await tx.dayPlan.create({
       data: { date: day, blocks: saved as unknown as Prisma.InputJsonValue, summary: String(input.summary ?? "").slice(0, 500) || null },
     });

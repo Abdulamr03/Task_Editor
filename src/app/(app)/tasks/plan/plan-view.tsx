@@ -20,15 +20,28 @@ export function PlannerPanel({
   hasKey,
   hasPlan,
   placeInfo,
+  nowStart,
+  dayStart,
+  dayEnd,
+  tomorrowHref,
 }: {
   day: string;
   hasKey: boolean;
   hasPlan: boolean;
   placeInfo: string;
+  // Today only: the time now (rounded up to 5 minutes); null on other days.
+  nowStart: number | null;
+  dayStart: number;
+  dayEnd: number;
+  tomorrowHref: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
+  // Today: plan from now (when the working day has already started).
+  const lateStart = nowStart != null && nowStart > dayStart;
+  const dayOver = nowStart != null && nowStart >= dayEnd - 15;
+  const [fromNow, setFromNow] = useState(lateStart && !dayOver);
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
@@ -46,7 +59,7 @@ export function PlannerPanel({
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/tasks/plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ date: day, note }) });
+      const res = await fetch("/tasks/plan", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ date: day, note, fromNow }) });
       const data = await res.json().catch(() => ({ error: "The server's answer couldn't be read." }));
       if (!res.ok || data.error) setError(data.error ?? "Something went wrong.");
       else setProposal(data);
@@ -59,7 +72,15 @@ export function PlannerPanel({
 
   if (!open) {
     return (
-      <button type="button" className={hasPlan ? buttonClass.secondary : buttonClass.primary} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={hasPlan ? buttonClass.secondary : buttonClass.primary}
+        onClick={() => {
+          // Each time: start from now again (if the day has started).
+          setFromNow(lateStart && !dayOver);
+          setOpen(true);
+        }}
+      >
         {hasPlan ? "↻ Re-plan my day" : "🗓 Plan my day"}
       </button>
     );
@@ -82,6 +103,25 @@ export function PlannerPanel({
       ) : !proposal ? (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-slate-500">{placeInfo}</p>
+          {nowStart != null && dayOver && (
+            <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
+              Your working day ended at {toHHMM(dayEnd)}.{" "}
+              <a href={tomorrowHref} className="font-medium text-blue-600 underline dark:text-blue-400">
+                Plan tomorrow →
+              </a>
+            </p>
+          )}
+          {lateStart && !dayOver && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" checked={fromNow} onChange={(e) => setFromNow(e.target.checked)} disabled={busy} className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-medium">Start from now ({toHHMM(nowStart!)})</span>
+                <span className="block text-slate-500">
+                  Plans {toHHMM(nowStart!)}–{toHHMM(dayEnd)}. Untick to plan the whole day from {toHHMM(dayStart)}.
+                </span>
+              </span>
+            </label>
+          )}
           <label className="flex flex-col gap-1 text-sm font-medium">
             Anything to know about today? (optional)
             <input
@@ -109,7 +149,7 @@ export function PlannerPanel({
           onBack={() => setProposal(null)}
           onSave={(items) =>
             startSaving(async () => {
-              const res = await savePlan({ date: day, summary: proposal.summary, items });
+              const res = await savePlan({ date: day, summary: proposal.summary, items, startAt: proposal.shape.dayStart });
               if ("error" in res) setError(res.error);
               else {
                 setOpen(false);

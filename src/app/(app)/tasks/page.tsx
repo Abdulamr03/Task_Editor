@@ -90,7 +90,16 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
 
       {canPlan && (
         <div className="flex flex-wrap gap-2">
-          <PlannerPanel day={dayText} hasKey={hasApiKey()} hasPlan={Boolean(plan)} placeInfo={placeInfo} />
+          <PlannerPanel
+            day={dayText}
+            hasKey={hasApiKey()}
+            hasPlan={Boolean(plan)}
+            placeInfo={placeInfo}
+            nowStart={isToday ? Math.ceil(minutesInZone(new Date(), planner.timeZone) / 5) * 5 : null}
+            dayStart={planner.dayStart}
+            dayEnd={planner.dayEnd}
+            tomorrowHref={`/tasks?date=${toDateInput(new Date(todayDay.getTime() + 86_400_000))}`}
+          />
         </div>
       )}
       {plan && (
