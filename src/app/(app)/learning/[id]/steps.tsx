@@ -40,6 +40,25 @@ export type StepItem = {
 
 // Unfinished levels that were never searched for resources.
 const unsearched = (steps: StepItem[]) => steps.filter((s) => !s.done && !s.coveredBy && !s.resourcesSearched).map((s) => s.id);
+// Unfinished levels searched before (for "Search all again").
+const searchedOpen = (steps: StepItem[]) => steps.filter((s) => !s.done && !s.coveredBy && s.resourcesSearched).map((s) => s.id);
+
+function ResourceButtons({ steps }: { steps: StepItem[] }) {
+  const again = searchedOpen(steps);
+  return (
+    <>
+      <FindResourcesButton stepIds={unsearched(steps)} />
+      {again.length > 0 && (
+        <FindResourcesButton
+          stepIds={again}
+          refresh
+          label="↻ Search all again"
+          confirmText={`Search the web again for ${again.length} level${again.length === 1 ? "" : "s"}? Their current resources are replaced.`}
+        />
+      )}
+    </>
+  );
+}
 
 export type MilestoneItem = { id: string; title: string; description: string | null };
 
@@ -74,7 +93,7 @@ export function StepList({
           <div className="flex flex-wrap gap-2">
             <AddStepForm pathId={pathId} />
             <AddMilestoneForm pathId={pathId} />
-            <FindResourcesButton stepIds={unsearched(steps)} />
+            <ResourceButtons steps={steps} />
           </div>
         )}
       </div>
@@ -108,7 +127,7 @@ export function StepList({
           <Steps steps={loose} firstNumber={number + 1} isAdmin={isAdmin} color={color} />
           {isAdmin && (
             <div className="mt-2">
-              <FindResourcesButton stepIds={unsearched(loose)} />
+              <span className="flex flex-wrap gap-2"><ResourceButtons steps={loose} /></span>
             </div>
           )}
         </section>
@@ -232,7 +251,7 @@ function MilestoneSection({
         <div className="mt-2">
           <span className="flex flex-wrap items-start gap-2">
             <AddStepForm pathId={pathId} milestoneId={milestone.id} label="+ Add level" />
-            <FindResourcesButton stepIds={unsearched(steps)} />
+            <ResourceButtons steps={steps} />
           </span>
         </div>
       )}

@@ -10,15 +10,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-// POST /learning/resources  { stepIds: string[], refresh?: boolean }
+// POST /learning/resources  { stepIds: string[], refresh?: true, refreshBefore?: ISO time }
 // Returns the study resources of these levels. Levels never searched before
-// (or all of them, with refresh) are searched on the web first, a few at a
-// time, and the results are saved on the levels.
+// (and, with refreshBefore, levels last searched before that time) are
+// searched on the web first, a few at a time, and the results are saved.
 export async function POST(request: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Please log in again." }, { status: 401 });
 
-  const body = (await request.json().catch(() => ({}))) as { stepIds?: unknown; refresh?: unknown };
+  const body = (await request.json().catch(() => ({}))) as { stepIds?: unknown; refresh?: unknown; refreshBefore?: unknown };
   const ids = Array.isArray(body.stepIds) ? [...new Set(body.stepIds.filter((x): x is string => typeof x === "string"))].slice(0, 100) : [];
   if (ids.length === 0) return NextResponse.json({ error: "No levels given." }, { status: 400 });
 
@@ -30,7 +30,13 @@ export async function POST(request: Request) {
 
   const resources: Record<string, Resource[]> = Object.fromEntries(steps.map((s) => [s.id, readResources(s.resources)]));
   const searchedBefore = new Set(steps.filter((s) => s.resourcesFoundAt).map((s) => s.id));
-  const wanted = steps.filter((s) => body.refresh === true || !s.resourcesFoundAt);
+  // "Search again": everything last searched before the first request. The
+  // server's own time is sent back and reused for the next rounds.
+  const now = new Date();
+  const before = typeof body.refreshBefore === "string" ? new Date(body.refreshBefore) : null;
+  const refreshBefore =
+    before && !Number.isNaN(before.getTime()) ? (before < now ? before : now) : body.refresh === true ? now : null;
+  const wanted = steps.filter((s) => !s.resourcesFoundAt || (refreshBefore != null && s.resourcesFoundAt < refreshBefore));
   const toSearch = user.role === "ADMIN" && hasApiKey() ? wanted.slice(0, LEVELS_PER_SEARCH) : [];
   const reply = (extra: Record<string, unknown> = {}) =>
     NextResponse.json({
@@ -38,6 +44,7 @@ export async function POST(request: Request) {
       searched: steps.filter((s) => searchedBefore.has(s.id)).map((s) => s.id),
       // Levels still waiting for a search (ask again to continue).
       remaining: wanted.length - toSearch.length,
+      refreshBefore: refreshBefore?.toISOString() ?? null,
       ...extra,
     });
 

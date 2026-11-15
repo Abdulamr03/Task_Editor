@@ -119,8 +119,11 @@ split into steps you tick off.
 
 ### Study resources (YouTube, Udemy, Coursera…)
 
-Each level can list **study resources**: videos, courses, docs and articles to
-learn it from, each marked **Free**, **Free to audit** (free to watch, the
+Each level can list **study resources**, mainly **video on demand**: video
+courses and lessons (YouTube full courses and playlists, Udemy, Coursera, edX,
+Pluralsight, Scrimba…). Every level gets at least two video courses or videos,
+listed first with their length; docs or a handbook come at most once, as an
+extra. Each resource is each marked **Free**, **Free to audit** (free to watch, the
 certificate costs money, as on most Coursera / edX courses) or **Paid** (with a
 price hint when known, e.g. "≈ $15 on sale").
 
@@ -128,7 +131,8 @@ price hint when known, e.g. "≈ $15 on sale").
   Claude for the unfinished levels that don't have resources yet, 6 levels at a
   time (it continues by itself), usually 30 seconds to 2 minutes per batch.
 - Open **📚 Study resources** under a level to see them; **↻ Search again**
-  looks again for that level.
+  looks again for that level, and **↻ Search all again** (under a milestone)
+  re-searches all its unfinished levels, replacing their resources.
 - Only links that really came up in the web search are kept, so links aren't
   made up, but check a course page for the current price.
 - Needs `ANTHROPIC_API_KEY`. Each search uses Claude plus web searches

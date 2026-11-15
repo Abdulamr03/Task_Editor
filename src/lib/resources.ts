@@ -68,7 +68,7 @@ export function readResources(raw: unknown): Resource[] {
       note: text(x.note, 200) || null,
     });
   }
-  return out;
+  return sortVideosFirst(out);
 }
 
 export function hostOf(url: string): string {
@@ -77,4 +77,13 @@ export function hostOf(url: string): string {
   } catch {
     return url;
   }
+}
+
+// Video courses and videos first (video on demand is the main way to learn here), then the rest.
+const KIND_ORDER: Record<ResourceKind, number> = { course: 0, video: 1, practice: 2, docs: 3, article: 4, book: 5 };
+export function sortVideosFirst(list: Resource[]): Resource[] {
+  return list
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => KIND_ORDER[a.r.kind] - KIND_ORDER[b.r.kind] || a.i - b.i)
+    .map((x) => x.r);
 }
