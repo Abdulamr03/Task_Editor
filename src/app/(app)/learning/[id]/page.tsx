@@ -10,6 +10,7 @@ import { LinkedTasks } from "@/components/linked-tasks";
 import { TimeSpent } from "@/components/time-spent";
 import { getTimeTotals } from "@/lib/time-stats";
 import { readResources } from "@/lib/resources";
+import { courseProgress } from "@/lib/courses";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
       milestones: { orderBy: { order: "asc" } },
       steps: {
         orderBy: { order: "asc" },
-        include: { coveredBy: { select: { title: true, learningPath: { select: { id: true, title: true } } } } },
+        include: {
+          coveredBy: { select: { title: true, learningPath: { select: { id: true, title: true } } } },
+          course: { select: { id: true, title: true, completedAt: true, items: { select: { heading: true, done: true } } } },
+        },
       },
     },
   });
@@ -88,6 +92,9 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
             pages: s.pages,
             resources: readResources(s.resources),
             resourcesSearched: s.resourcesFoundAt != null,
+            course: s.course
+              ? { id: s.course.id, title: s.course.title, percent: courseProgress(s.course.items).percent, completed: s.course.completedAt != null }
+              : null,
             coveredBy: s.coveredBy
               ? { title: s.coveredBy.title, pathId: s.coveredBy.learningPath.id, pathTitle: s.coveredBy.learningPath.title }
               : null,

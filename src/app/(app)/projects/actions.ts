@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDateInput } from "@/lib/dates";
 import { isProjectStatus } from "@/lib/projects";
+import { checkProject } from "@/lib/achievements";
 import type { ItemFormState as ProjectFormState } from "@/components/item-form";
 
 
@@ -49,6 +50,7 @@ export async function createProject(_state: ProjectFormState, formData: FormData
   if (!result.ok) return result.state;
 
   const project = await db.project.create({ data: result.data });
+  await checkProject(project.id);
   revalidatePath("/projects");
   redirect(`/projects/${project.id}`);
 }
@@ -64,6 +66,7 @@ export async function updateProject(
 
   const updated = await db.project.updateMany({ where: { id }, data: result.data });
   if (updated.count === 0) return { error: "This project no longer exists." };
+  await checkProject(id);
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${id}`);
@@ -74,7 +77,9 @@ export async function setProjectStatus(id: string, status: ProjectStatus): Promi
   await requireAdmin();
   if (!isProjectStatus(status)) return;
   await db.project.updateMany({ where: { id }, data: { status } });
+  await checkProject(id);
   revalidatePath("/projects");
+  revalidatePath("/achievements");
   revalidatePath(`/projects/${id}`);
 }
 

@@ -5,6 +5,24 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Courses and achievements
+- **Courses** (new page in the top bar): the course you're studying with its
+  link, platform (found from the link), notes, and its **content as a
+  checklist** (paste one lesson per line, `# Section` for sections; edit later
+  keeping ticks). Big progress bar, per-section counts, ticks are instant.
+- A course is **linked to learning levels**; when every lesson is ticked the
+  course is complete and its **levels are ticked automatically**.
+- **Achievements** (🏆 page in the top bar): earned automatically for a
+  completed course, a completed learning path (all levels done — also when a
+  course finishes it) and a project set to Done. Kept once earned, one per
+  item, removable by hand. Celebration message when a course is finished.
+- Learning path page: a level shows its course and progress; 🎓 adds a course
+  for a level; **＋ Add to my courses** on course / video study resources.
+- Home: "Courses" in progress and latest "Achievements".
+- Database: `Course`, `CourseItem`, `Achievement` (+ `AchievementKind`),
+  `LearningStep.courseId` (migration `20261115160000_courses_achievements`).
+  Backups include them; older backups still restore.
+
 ### `feature` — Study resources focus on video courses
 - The search now treats **video on demand** as the main way to learn: each
   level gets at least two video courses or video lessons (a free one such as a

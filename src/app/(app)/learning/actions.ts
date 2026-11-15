@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { checkPaths } from "@/lib/achievements";
 import { redirect } from "next/navigation";
 import type { ProjectStatus } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -36,6 +37,7 @@ function readPathForm(formData: FormData) {
 
 function refresh(pathId?: string) {
   revalidatePath("/learning");
+  revalidatePath("/achievements");
   if (pathId) revalidatePath(`/learning/${pathId}`);
 }
 
@@ -143,7 +145,10 @@ export async function toggleStep(stepId: string, done: boolean): Promise<void> {
   const step = await db.learningStep
     .update({ where: { id: stepId }, data: { done, doneAt: done ? new Date() : null } })
     .catch(() => null);
-  if (step) refresh(step.learningPathId);
+  if (step) {
+    if (done) await checkPaths([step.learningPathId]);
+    refresh(step.learningPathId);
+  }
 }
 
 // Swap a step with the one above or below it (within the same milestone).
@@ -171,7 +176,11 @@ export async function moveStep(stepId: string, direction: "up" | "down"): Promis
 export async function deleteStep(stepId: string): Promise<void> {
   await requireAdmin();
   const step = await db.learningStep.delete({ where: { id: stepId } }).catch(() => null);
-  if (step) refresh(step.learningPathId);
+  if (step) {
+    // Removing the last unfinished level can finish the path.
+    await checkPaths([step.learningPathId]);
+    refresh(step.learningPathId);
+  }
 }
 
 // ---------- Milestones ----------

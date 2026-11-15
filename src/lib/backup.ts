@@ -30,6 +30,7 @@ const TASK_STATUS = ["TODO", "IN_PROGRESS", "DONE"] as const;
 const PRIORITY = ["LOW", "MEDIUM", "HIGH"] as const;
 const RULE = ["DAILY", "WEEKDAYS"] as const;
 const DIFFICULTY = ["EASY", "MEDIUM", "HARD", null] as const;
+const ACHIEVEMENT_KIND = ["COURSE", "LEARNING_PATH", "PROJECT"] as const;
 
 const TABLES = {
   projects: {
@@ -47,7 +48,7 @@ const TABLES = {
   learningSteps: {
     id: "id", learningPathId: "id", milestoneId: "id?", title: "string", order: "int", done: "bool",
     doneAt: "date?", resourceUrl: "string?", notes: "string?", estimateMinutes: "int?", difficulty: DIFFICULTY, pages: "string?",
-    coveredById: "id?", resources: "list", resourcesFoundAt: "date?", createdAt: "date", updatedAt: "date",
+    coveredById: "id?", courseId: "id?", resources: "list", resourcesFoundAt: "date?", createdAt: "date", updatedAt: "date",
   },
   recurringTasks: {
     id: "id", title: "string", notes: "string?", rule: RULE, priority: PRIORITY, estimateMinutes: "int?",
@@ -63,6 +64,18 @@ const TABLES = {
     id: "id", date: "date", minutes: "int", note: "string?", projectId: "id?", learningPathId: "id?", createdAt: "date",
   },
   dayPlans: { id: "id", date: "date", blocks: "json", summary: "string?", createdAt: "date", updatedAt: "date" },
+  courses: {
+    id: "id", title: "string", url: "string?", provider: "string?", notes: "string?", completedAt: "date?",
+    createdAt: "date", updatedAt: "date",
+  },
+  courseItems: {
+    id: "id", courseId: "id", title: "string", order: "int", heading: "bool", done: "bool", doneAt: "date?",
+    createdAt: "date", updatedAt: "date",
+  },
+  achievements: {
+    id: "id", kind: ACHIEVEMENT_KIND, title: "string", detail: "string?", earnedAt: "date",
+    courseId: "id?", learningPathId: "id?", projectId: "id?", createdAt: "date",
+  },
   plannerSettings: {
     id: "id", dayStart: "int", dayEnd: "int", maxBlock: "int", breakMinutes: "int", lunchStart: "int", lunchMinutes: "int",
     prayersEnabled: "bool", locationName: "string", latitude: "number", longitude: "number", timeZone: "string",
@@ -80,6 +93,9 @@ export const TABLE_LABELS: Record<TableName, string> = {
   tasks: "Tasks",
   timeLogs: "Time log entries",
   dayPlans: "Day plans",
+  courses: "Courses",
+  courseItems: "Course lessons",
+  achievements: "Achievements",
   plannerSettings: "Day planner settings",
 };
 const TABLE_NAMES = Object.keys(TABLES) as TableName[];
@@ -93,7 +109,7 @@ export type Counts = Record<TableName, number>;
 const selectOf = (table: TableName) => Object.fromEntries(Object.keys(TABLES[table]).map((f) => [f, true]));
 
 export async function buildBackup() {
-  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings] = await Promise.all([
+  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings, courses, courseItems, achievements] = await Promise.all([
     db.project.findMany({ select: selectOf("projects"), orderBy: { createdAt: "asc" } }),
     db.learningPath.findMany({ select: selectOf("learningPaths"), orderBy: { createdAt: "asc" } }),
     db.milestone.findMany({ select: selectOf("milestones"), orderBy: [{ learningPathId: "asc" }, { order: "asc" }] }),
@@ -103,18 +119,21 @@ export async function buildBackup() {
     db.timeLog.findMany({ select: selectOf("timeLogs"), orderBy: [{ date: "asc" }, { createdAt: "asc" }] }),
     db.dayPlan.findMany({ select: selectOf("dayPlans"), orderBy: { date: "asc" } }),
     db.plannerSettings.findMany({ select: selectOf("plannerSettings") }),
+    db.course.findMany({ select: selectOf("courses"), orderBy: { createdAt: "asc" } }),
+    db.courseItem.findMany({ select: selectOf("courseItems"), orderBy: [{ courseId: "asc" }, { order: "asc" }] }),
+    db.achievement.findMany({ select: selectOf("achievements"), orderBy: { earnedAt: "asc" } }),
   ]);
   return {
     app: BACKUP_APP,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     note: "Task Editor backup. Accounts and passwords are not included.",
-    data: { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings },
+    data: { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, courses, courseItems, achievements, plannerSettings },
   };
 }
 
 export async function currentCounts(): Promise<Counts> {
-  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings] = await Promise.all([
+  const [projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings, courses, courseItems, achievements] = await Promise.all([
     db.project.count(),
     db.learningPath.count(),
     db.milestone.count(),
@@ -124,8 +143,11 @@ export async function currentCounts(): Promise<Counts> {
     db.timeLog.count(),
     db.dayPlan.count(),
     db.plannerSettings.count(),
+    db.course.count(),
+    db.courseItem.count(),
+    db.achievement.count(),
   ]);
-  return { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, plannerSettings };
+  return { projects, learningPaths, milestones, learningSteps, recurringTasks, tasks, timeLogs, dayPlans, courses, courseItems, achievements, plannerSettings };
 }
 
 // ---------- Checking a backup file ----------
@@ -172,6 +194,27 @@ export function parseBackup(raw: unknown): ParsedBackup {
     }
   };
 
+  const courseIds = ids("courses");
+  // Course lessons must belong to a course in the file.
+  const lessonsBefore = data.courseItems.length;
+  data.courseItems = data.courseItems.filter((c) => courseIds.has(c.courseId as string));
+  fixes += lessonsBefore - data.courseItems.length;
+  // Achievements: links to things not in the file are cleared; one per course / path / project.
+  const used = new Set<string>();
+  for (const a of data.achievements) {
+    clear(a, "courseId", courseIds);
+    clear(a, "learningPathId", paths);
+    clear(a, "projectId", projects);
+    for (const f of ["courseId", "learningPathId", "projectId"]) {
+      if (a[f] == null) continue;
+      const key = `${f}:${a[f]}`;
+      if (used.has(key)) {
+        a[f] = null;
+        fixes++;
+      } else used.add(key);
+    }
+  }
+
   // Milestones and steps must belong to a learning path in the file.
   const before = data.milestones.length + data.learningSteps.length;
   data.milestones = data.milestones.filter((m) => paths.has(m.learningPathId as string));
@@ -185,6 +228,7 @@ export function parseBackup(raw: unknown): ParsedBackup {
       s.milestoneId = null;
       fixes++;
     }
+    clear(s, "courseId", courseIds);
     clear(s, "coveredById", steps);
     if (s.coveredById === s.id) {
       s.coveredById = null;
@@ -312,6 +356,8 @@ export async function restoreBackup(data: BackupData): Promise<void> {
       // Delete in an order that respects the links.
       await tx.dayPlan.deleteMany();
       await tx.plannerSettings.deleteMany();
+      await tx.achievement.deleteMany();
+      await tx.courseItem.deleteMany();
       await tx.timeLog.deleteMany();
       await tx.task.deleteMany();
       await tx.recurringTask.deleteMany();
@@ -320,10 +366,14 @@ export async function restoreBackup(data: BackupData): Promise<void> {
       await tx.milestone.deleteMany();
       await tx.learningPath.deleteMany();
       await tx.project.deleteMany();
+      await tx.course.deleteMany();
 
       await tx.project.createMany({ data: data.projects as unknown as Prisma.ProjectCreateManyInput[] });
       await tx.learningPath.createMany({ data: data.learningPaths as unknown as Prisma.LearningPathCreateManyInput[] });
       await tx.milestone.createMany({ data: data.milestones as unknown as Prisma.MilestoneCreateManyInput[] });
+      // Courses before steps (steps link to them).
+      await tx.course.createMany({ data: data.courses as unknown as Prisma.CourseCreateManyInput[] });
+      await tx.courseItem.createMany({ data: data.courseItems as unknown as Prisma.CourseItemCreateManyInput[] });
       // Steps first without their "covered by" links (they point at other steps), then the links.
       await tx.learningStep.createMany({
         data: data.learningSteps.map((s) => ({ ...s, coveredById: null })) as unknown as Prisma.LearningStepCreateManyInput[],
@@ -342,6 +392,7 @@ export async function restoreBackup(data: BackupData): Promise<void> {
       await tx.timeLog.createMany({ data: data.timeLogs as unknown as Prisma.TimeLogCreateManyInput[] });
       await tx.dayPlan.createMany({ data: data.dayPlans as unknown as Prisma.DayPlanCreateManyInput[] });
       await tx.plannerSettings.createMany({ data: data.plannerSettings as unknown as Prisma.PlannerSettingsCreateManyInput[] });
+      await tx.achievement.createMany({ data: data.achievements as unknown as Prisma.AchievementCreateManyInput[] });
     },
     { timeout: 120_000, maxWait: 10_000 },
   );

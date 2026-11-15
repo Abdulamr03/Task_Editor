@@ -11,6 +11,8 @@ import { getStreak, getThisWeek } from "@/lib/stats";
 import { getTimeTotals } from "@/lib/time-stats";
 import { formatMinutes } from "@/lib/tasks";
 import { Card, ProgressBar } from "@/components/ui";
+import { courseProgress } from "@/lib/courses";
+import { KIND_ICON } from "@/lib/achievements";
 import { DueLabel } from "@/components/due-label";
 import { WeekChart } from "@/components/week-chart";
 import { TaskList } from "./tasks/task-list";
@@ -50,6 +52,12 @@ export default async function Dashboard() {
     getThisWeek(),
     isAdmin ? getLinkGroups() : Promise.resolve({ projects: [], paths: [] }),
     getTimeTotals({}),
+  ]);
+  // Courses being studied and the latest achievements.
+  const [studying, latest, achievementCount] = await Promise.all([
+    db.course.findMany({ where: { completedAt: null }, orderBy: { updatedAt: "desc" }, take: 4, include: { items: { select: { heading: true, done: true } } } }),
+    db.achievement.findMany({ orderBy: { earnedAt: "desc" }, take: 3 }),
+    db.achievement.count(),
   ]);
   const [projectProgress, pathProgress] = await Promise.all([
     getProjectProgress(projects.map((p) => p.id)),
@@ -183,6 +191,50 @@ export default async function Dashboard() {
                   </Link>
                 );
               })}
+            </Card>
+          )}
+        </section>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="flex flex-col gap-3">
+          <SectionTitle title="Courses" href="/courses" linkLabel="All courses →" />
+          {studying.length === 0 ? (
+            <Card className="text-sm text-slate-500">No courses in progress.</Card>
+          ) : (
+            <Card padded={false} className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700">
+              {studying.map((c) => {
+                const prog = courseProgress(c.items);
+                return (
+                  <Link key={c.id} href={`/courses/${c.id}`} className="flex flex-col gap-2 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <span className="font-medium">
+                      🎓 {c.title}
+                      {c.provider && <span className="ml-2 text-sm font-normal text-slate-500">{c.provider}</span>}
+                    </span>
+                    <ProgressBar done={prog.done} total={prog.total} color="#0ea5e9" unit="lessons" />
+                  </Link>
+                );
+              })}
+            </Card>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <SectionTitle title={`Achievements · ${achievementCount}`} href="/achievements" linkLabel="All achievements →" />
+          {latest.length === 0 ? (
+            <Card className="text-sm text-slate-500">Finish a course, a learning path or a project to earn your first 🏆.</Card>
+          ) : (
+            <Card padded={false} className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700">
+              {latest.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 p-4">
+                  <span aria-hidden="true" className="text-xl">{KIND_ICON[a.kind]}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{a.title}</span>
+                    <span className="text-xs text-slate-500">{a.earnedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  </span>
+                  <span aria-hidden="true">🏆</span>
+                </div>
+              ))}
             </Card>
           )}
         </section>
