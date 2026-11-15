@@ -73,6 +73,7 @@ model Project {
   tasks          Task[]
   recurringTasks RecurringTask[]
   timeLogs       TimeLog[]
+  achievement    Achievement?
 }
 
 model LearningPath {
@@ -86,6 +87,7 @@ model LearningPath {
   updatedAt   DateTime      @updatedAt
 
   steps          LearningStep[]
+  achievement    Achievement?
   milestones     Milestone[]
   tasks          Task[]
   recurringTasks RecurringTask[]
@@ -133,6 +135,9 @@ model LearningStep {
   // Study resources found on the web (YouTube, Udemy, Coursera…), see src/lib/resources.ts.
   resources        Json           @default("[]")
   resourcesFoundAt DateTime?
+  // The course being studied for this level; finishing it ticks the level.
+  courseId         String?
+  course           Course?        @relation(fields: [courseId], references: [id], onDelete: SetNull)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -236,4 +241,64 @@ model PlannerSettings {
   asrMethod      String   @default("Standard")
   prayerMinutes  Int      @default(15)
   updatedAt      DateTime @updatedAt
+}
+
+// A course being studied (Udemy, Coursera, YouTube playlist…) with its content
+// as a checklist. Finishing every item completes it: linked learning levels are
+// ticked and an achievement is earned.
+model Course {
+  id          String    @id @default(cuid())
+  title       String
+  url         String?
+  // e.g. "Udemy", from the link unless typed.
+  provider    String?
+  notes       String?
+  // Set when every item is done (cleared if one is unticked again).
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items       CourseItem[]
+  steps       LearningStep[]
+  achievement Achievement?
+}
+
+// One line of a course's content: a lesson / video / section to tick off.
+// Headings (sections) group the lines below them and aren't ticked.
+model CourseItem {
+  id        String    @id @default(cuid())
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  order     Int
+  heading   Boolean   @default(false)
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([courseId, order])
+}
+
+enum AchievementKind {
+  COURSE
+  LEARNING_PATH
+  PROJECT
+}
+
+// Earned when a course, learning path or project is finished. Kept once
+// earned (it records the day); the title is copied so it survives deletion.
+model Achievement {
+  id             String          @id @default(cuid())
+  kind           AchievementKind
+  title          String
+  detail         String?
+  earnedAt       DateTime        @default(now())
+  courseId       String?         @unique
+  course         Course?         @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  learningPathId String?         @unique
+  learningPath   LearningPath?   @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
+  projectId      String?         @unique
+  project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
 }

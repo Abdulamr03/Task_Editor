@@ -160,6 +160,38 @@ into a learning path with milestones and levels, using Claude (Anthropic's AI).
 The PDF and the titles of your finished steps are sent to Anthropic. Model:
 Claude Opus 5.5 (`src/lib/ai/pdf-plan.ts`).
 
+## Courses
+
+Open **Courses** in the top bar to track the courses you're studying
+(Udemy, Coursera, YouTube playlists…).
+
+- **+ New course**: name, link (the platform is found from it), notes, the
+  **course content** and the **learning levels it covers**.
+- **Course content** is a checklist: one lesson per line, `# Section` lines for
+  sections. Copy the curriculum from the course page and paste it in.
+  **✎ Edit content** changes it later; lessons that keep their name keep their
+  ticks, and `[x]` in front of a line marks it done.
+- Tick lessons as you go. The **progress bar** shows lessons done, and each
+  section shows "3 / 5".
+- **When every lesson is ticked** the course is complete: its linked learning
+  levels are **ticked automatically**, and you earn an **achievement** 🏆.
+  Unticking a lesson reopens the course, but the achievement stays.
+- On a learning path, a level with a course shows "🎓 course name · 40%";
+  🎓 next to a level adds a course for it, and **＋ Add to my courses** on a
+  course in its 📚 Study resources creates the course already linked.
+- Deleting a course deletes its checklist; linked levels and its achievement stay.
+
+## Achievements
+
+**🏆 Achievements** in the top bar lists what you've finished, with the date:
+
+- 🎓 **Course completed**: every lesson of a course ticked.
+- 🧭 **Learning path completed**: every level of a learning path done.
+- 🚀 **Project done**: a project's status set to Done.
+
+They're earned automatically and kept once earned; ✕ removes one by hand.
+Home shows your courses in progress and your latest achievements.
+
 ## Daily tasks
 
 Open **Today** in the top bar.
@@ -309,6 +341,10 @@ src/app/logout/        Clears the login cookie (also used by Switch account)
 src/lib/theme.ts       Light / dark / system setting (cookie)
 src/lib/backup.ts      Backup file: build, check and restore
 src/lib/planner/       Day planner: prayer times, packing blocks on the clock, settings
+src/app/(app)/courses  Courses: list, new/edit form, course page with checklist
+src/app/(app)/achievements  Achievements page
+src/lib/courses.ts     Course content parsing, progress, platform from link
+src/lib/achievements.ts  Course completion (ticks levels) and earning achievements
 src/lib/ai/            Claude requests: client.ts (shared), pdf-plan.ts, day-plan.ts,
                        resources.ts (study resources via web search)
 src/lib/resources.ts   Study resource type, labels and checks

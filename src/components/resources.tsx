@@ -25,7 +25,7 @@ export function resourceSummary(list: Resource[]): string {
   return `${list.length} resource${list.length === 1 ? "" : "s"}${free ? ` · ${free} free` : ""}`;
 }
 
-export function ResourceList({ resources }: { resources: Resource[] }) {
+export function ResourceList({ resources, onAddCourse }: { resources: Resource[]; onAddCourse?: (r: Resource) => void }) {
   return (
     <ul className="flex flex-col gap-2">
       {resources.map((r) => (
@@ -41,6 +41,11 @@ export function ResourceList({ resources }: { resources: Resource[] }) {
               <span>{r.provider}</span>
               <CostBadge cost={r.cost} price={r.price} />
               {r.note && <span>{r.note}</span>}
+              {onAddCourse && (r.kind === "course" || r.kind === "video") && (
+                <button type="button" onClick={() => onAddCourse(r)} className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+                  ＋ Add to my courses
+                </button>
+              )}
             </span>
           </span>
         </li>
@@ -54,11 +59,14 @@ export function ResourcesDisclosure({
   resources,
   searched,
   onSearchAgain,
+  onAddCourse,
   busy = false,
 }: {
   resources: Resource[];
   searched: boolean;
   onSearchAgain?: () => void;
+  // Learning levels: turn a course resource into one of "my courses".
+  onAddCourse?: (r: Resource) => void;
   busy?: boolean;
 }) {
   if (!searched && resources.length === 0) return null;
@@ -80,7 +88,7 @@ export function ResourcesDisclosure({
         📚 Study resources <span className="font-normal text-slate-500">({resourceSummary(resources)})</span>
       </summary>
       <div className="mt-2">
-        <ResourceList resources={resources} />
+        <ResourceList resources={resources} onAddCourse={onAddCourse} />
         {onSearchAgain && (
           <button type="button" disabled={busy} onClick={onSearchAgain} className="mt-2 text-xs text-blue-600 hover:underline disabled:opacity-50 dark:text-blue-400">
             {busy ? "Searching the web…" : "↻ Search again"}

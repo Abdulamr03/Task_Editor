@@ -8,7 +8,9 @@ const LINKS = [
   { href: "/tasks", label: "Today" },
   { href: "/projects", label: "Projects" },
   { href: "/learning", label: "Learning" },
+  { href: "/courses", label: "Courses" },
   { href: "/time", label: "Time" },
+  { href: "/achievements", label: "🏆 Achievements" },
   { href: "/export", label: "Export" },
 ];
 

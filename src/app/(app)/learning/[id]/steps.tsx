@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DIFFICULTIES, DIFFICULTY_LABEL, formatMinutes } from "@/lib/tasks";
 import type { Resource } from "@/lib/resources";
 import { fetchResources, FindResourcesButton, ResourcesDisclosure } from "@/components/resources";
+import { addCourseFromResource } from "../../courses/actions";
 import {
   addMilestone,
   addStep,
@@ -36,6 +37,8 @@ export type StepItem = {
   resources: Resource[];
   // Searched on the web before (even if nothing was found).
   resourcesSearched: boolean;
+  // The course studied for this level (ticks it when finished).
+  course: { id: string; title: string; percent: number; completed: boolean } | null;
 };
 
 // Unfinished levels that were never searched for resources.
@@ -370,6 +373,15 @@ function StepRow({
             {step.pages && <span>📖 {step.pages}</span>}
           </p>
         )}
+        {step.course && (
+          <Link
+            href={`/courses/${step.course.id}`}
+            className="mt-1 inline-flex max-w-full items-center gap-2 rounded-full bg-sky-500/10 px-2.5 py-0.5 text-xs font-medium text-sky-800 hover:underline dark:text-sky-300"
+          >
+            <span className="truncate">🎓 {step.course.title}</span>
+            <span className="shrink-0 tabular-nums">{step.course.completed ? "🏆 done" : `${step.course.percent}%`}</span>
+          </Link>
+        )}
         {step.notes && <p className="mt-1 whitespace-pre-wrap text-sm text-slate-500">{step.notes}</p>}
         {step.coveredBy && (
           <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
@@ -383,6 +395,7 @@ function StepRow({
           resources={step.resources}
           searched={step.resourcesSearched}
           busy={searching}
+          onAddCourse={isAdmin ? (r) => startTransition(() => addCourseFromResource(step.id, r.title, r.url)) : undefined}
           onSearchAgain={
             isAdmin
               ? async () => {
@@ -407,6 +420,16 @@ function StepRow({
           <IconButton label="Move down" disabled={isLast || pending} onClick={() => startTransition(() => moveStep(step.id, "down"))}>
             ↓
           </IconButton>
+          {!step.course && (
+            <Link
+              href={`/courses/new?step=${step.id}`}
+              title="Add the course you study for this level"
+              aria-label={`Add a course for "${step.title}"`}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              🎓
+            </Link>
+          )}
           <IconButton label="Edit step" disabled={pending} onClick={() => setEditing(true)}>
             ✎
           </IconButton>
