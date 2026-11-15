@@ -77,7 +77,7 @@ export async function gatherCandidates(day: Date) {
       nextLevels: l.steps
         .filter((s) => !s.done)
         .slice(0, 3)
-        .map((s) => ({ title: s.title, milestone: s.milestone?.title ?? null, estimateMinutes: s.estimateMinutes, difficulty: s.difficulty })),
+        .map((s) => ({ id: s.id, title: s.title, milestone: s.milestone?.title ?? null, estimateMinutes: s.estimateMinutes, difficulty: s.difficulty })),
     })),
   };
 }
@@ -96,12 +96,13 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["kind", "taskId", "projectId", "learningPathId", "title", "minutes", "difficulty", "reason"],
+        required: ["kind", "taskId", "projectId", "learningPathId", "levelIds", "title", "minutes", "difficulty", "reason"],
         properties: {
           kind: { type: "string", enum: ["task", "project", "study"] },
           taskId: { anyOf: [{ type: "string" }, { type: "null" }], description: "For kind task: the task's id." },
           projectId: { anyOf: [{ type: "string" }, { type: "null" }], description: "For kind project: the project's id." },
           learningPathId: { anyOf: [{ type: "string" }, { type: "null" }], description: "For kind study: the learning path's id." },
+          levelIds: { type: "array", items: { type: "string" }, description: "For kind study: the ids of the levels to study (from nextLevels). Empty for other kinds." },
           title: { type: "string", description: "What to do in this block, short and concrete." },
           minutes: { type: "integer", description: "Total minutes for this item today." },
           difficulty: { type: "string", enum: ["EASY", "MEDIUM", "HARD"] },
@@ -117,7 +118,7 @@ const SYSTEM = `You plan a person's working day in a personal task tracker. You 
 Choose from:
 - tasks (kind "task", use its taskId): overdue tasks and tasks planned for this day,
 - projects (kind "project", use its projectId): for focused work on a project with an upcoming deadline or open work even when no single task covers it; give a concrete title like "Thesis: draft chapter 2 methods",
-- learning paths (kind "study", use its learningPathId): to study the path's next levels; name the level(s) in the title.
+- learning paths (kind "study", use its learningPathId): to study the path's next levels; name the level(s) in the title and give their ids in levelIds.
 
 How to plan:
 - Fill about the available work minutes, not more. Use realistic times: the task or level estimate when there is one, otherwise judge from the title and difficulty.
@@ -195,7 +196,9 @@ export function cleanItems(raw: unknown, c: Candidates): { summary: string; item
     } else if (x.kind === "project" && typeof x.projectId === "string" && projects.has(x.projectId)) {
       items.push({ ...base, kind: "project", projectId: x.projectId, title: title || `Work on ${projects.get(x.projectId)!.name}` });
     } else if (x.kind === "study" && typeof x.learningPathId === "string" && paths.has(x.learningPathId)) {
-      items.push({ ...base, kind: "study", learningPathId: x.learningPathId, title: title || `Study: ${paths.get(x.learningPathId)!.title}` });
+      const levels = new Set(paths.get(x.learningPathId)!.nextLevels.map((l) => l.id));
+      const stepIds = [...new Set(Array.isArray(x.levelIds) ? x.levelIds.filter((id): id is string => typeof id === "string" && levels.has(id)) : [])];
+      items.push({ ...base, kind: "study", learningPathId: x.learningPathId, title: title || `Study: ${paths.get(x.learningPathId)!.title}`, stepIds });
     }
   }
   const summary = typeof r.summary === "string" ? r.summary.trim().slice(0, 500) : "";

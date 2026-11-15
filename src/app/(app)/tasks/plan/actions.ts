@@ -39,12 +39,16 @@ export async function savePlan(input: {
   const [tasks, projects, paths] = await Promise.all([
     db.task.findMany({ where: { id: { in: items.map((i) => i.taskId).filter((x): x is string => Boolean(x)) }, status: { not: "DONE" } } }),
     db.project.findMany({ where: { id: { in: items.map((i) => i.projectId).filter((x): x is string => Boolean(x)) } }, select: { id: true } }),
-    db.learningPath.findMany({ where: { id: { in: items.map((i) => i.learningPathId).filter((x): x is string => Boolean(x)) } }, select: { id: true } }),
+    db.learningPath.findMany({
+      where: { id: { in: items.map((i) => i.learningPathId).filter((x): x is string => Boolean(x)) } },
+      select: { id: true, steps: { select: { id: true } } },
+    }),
   ]);
   // Tasks an earlier plan made for this day are removed when saving, so they can't be reused.
   const taskById = new Map(tasks.filter((t) => !(t.fromPlan && t.date.getTime() === day.getTime())).map((t) => [t.id, t]));
   const projectIds = new Set(projects.map((p) => p.id));
   const pathIds = new Set(paths.map((p) => p.id));
+  const stepsOfPath = new Map(paths.map((p) => [p.id, new Set(p.steps.map((s) => s.id))]));
   const clean: PlanItem[] = items.flatMap((i, n): PlanItem[] => {
     const minutes = Math.min(Math.max(Math.round(Number(i.minutes) / 5) * 5 || 0, 10), 300);
     const difficulty: PlanItem["difficulty"] = i.difficulty === "EASY" || i.difficulty === "HARD" ? i.difficulty : "MEDIUM";
@@ -57,7 +61,9 @@ export async function savePlan(input: {
       return [{ ...base, kind: "project", title, taskId: null, projectId: i.projectId, learningPathId: null }];
     }
     if (i.kind === "study" && i.learningPathId && pathIds.has(i.learningPathId) && title) {
-      return [{ ...base, kind: "study", title, taskId: null, projectId: null, learningPathId: i.learningPathId }];
+      const own = stepsOfPath.get(i.learningPathId)!;
+      const stepIds = (Array.isArray(i.stepIds) ? i.stepIds : []).filter((id) => typeof id === "string" && own.has(id)).slice(0, 10);
+      return [{ ...base, kind: "study", title, taskId: null, projectId: null, learningPathId: i.learningPathId, stepIds }];
     }
     return [];
   });

@@ -5,6 +5,25 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Study resources (free and paid)
+- Learning levels can now hold **study resources**: YouTube videos and
+  playlists, Udemy / Coursera / edX courses, official docs, articles…, each
+  marked **Free**, **Free to audit** or **Paid** (with a price hint), plus the
+  provider and a short note.
+- **🔎 Find study resources** on a learning path (per milestone) searches the
+  web with Claude Opus 5.5 (`web_search` server tool + a strict
+  `give_resources` tool, refusal fallback, paused searches resumed). Unfinished,
+  not-yet-searched levels go 6 at a time; **↻ Search again** per level.
+  Only links that appeared in the search results are kept, so none are made up.
+- **Plan my day**: Claude now names the levels each study block covers;
+  with **Suggest study resources** (on by default) the review lists resources
+  under each study block (searched after the plan appears, saved levels reused),
+  and the saved plan shows them on the study block.
+- Database: `LearningStep.resources` (JSON list) and `resourcesFoundAt`
+  (migration `20261115100000_study_resources`). Backups include them; older
+  backups still restore.
+- New route `POST /learning/resources`; viewers can see resources but not search.
+
 ### `feature` — Plan my day starts from now
 - On **today**, "Plan my day" now plans from the time you press the button
   (rounded up to 5 minutes) until the end of your working day; before the day

@@ -9,6 +9,14 @@ import { pack, type Block, type DayShape, type FixedBlock, type PlanItem } from 
 import { toHHMM } from "@/lib/planner/time";
 import { setTaskStatus } from "../actions";
 import { clearPlan, savePlan } from "./actions";
+import type { Resource } from "@/lib/resources";
+import { fetchResources, ResourcesDisclosure } from "@/components/resources";
+
+// One list of resources for several levels (no repeats).
+function resourcesFor(stepIds: string[] | undefined, map: Record<string, Resource[]>): Resource[] {
+  const seen = new Set<string>();
+  return (stepIds ?? []).flatMap((id) => map[id] ?? []).filter((r) => (seen.has(r.url) ? false : (seen.add(r.url), true)));
+}
 
 const ICON: Record<Block["kind"], string> = { work: "", break: "☕", prayer: "🕌", lunch: "🍽" };
 const KIND_LABEL: Record<PlanItem["kind"], string> = { task: "Task", project: "Project", study: "Study" };
@@ -42,6 +50,7 @@ export function PlannerPanel({
   const lateStart = nowStart != null && nowStart > dayStart;
   const dayOver = nowStart != null && nowStart >= dayEnd - 15;
   const [fromNow, setFromNow] = useState(lateStart && !dayOver);
+  const [withResources, setWithResources] = useState(true);
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
@@ -122,6 +131,15 @@ export function PlannerPanel({
               </span>
             </label>
           )}
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" checked={withResources} onChange={(e) => setWithResources(e.target.checked)} disabled={busy} className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              <span className="font-medium">Suggest study resources</span>
+              <span className="block text-slate-500">
+                For study blocks: videos, courses and docs from YouTube, Udemy, Coursera and more, marked free or paid. Uses web search.
+              </span>
+            </span>
+          </label>
           <label className="flex flex-col gap-1 text-sm font-medium">
             Anything to know about today? (optional)
             <input
@@ -145,6 +163,7 @@ export function PlannerPanel({
       ) : (
         <Review
           proposal={proposal}
+          withResources={withResources}
           saving={saving}
           onBack={() => setProposal(null)}
           onSave={(items) =>
@@ -167,12 +186,14 @@ export function PlannerPanel({
 
 function Review({
   proposal,
+  withResources,
   saving,
   onBack,
   onSave,
   error,
 }: {
   proposal: { summary: string; items: PlanItem[]; fixed: FixedBlock[]; shape: DayShape };
+  withResources: boolean;
   saving: boolean;
   onBack: () => void;
   onSave: (items: PlanItem[]) => void;
@@ -181,6 +202,32 @@ function Review({
   const [items, setItems] = useState(proposal.items);
   const { blocks, unplaced } = useMemo(() => pack(items, proposal.fixed, proposal.shape), [items, proposal.fixed, proposal.shape]);
   const total = items.reduce((s, i) => s + i.minutes, 0);
+
+  // Study resources for the study blocks, fetched (and searched if needed) after the plan shows.
+  const [resources, setResources] = useState<Record<string, Resource[]>>({});
+  const [searched, setSearched] = useState<Set<string>>(new Set());
+  const [finding, setFinding] = useState(false);
+  const [findError, setFindError] = useState("");
+  useEffect(() => {
+    const ids = [...new Set(proposal.items.flatMap((i) => (i.kind === "study" ? (i.stepIds ?? []) : [])))];
+    if (!withResources || ids.length === 0) return;
+    let live = true;
+    setFinding(true);
+    fetchResources(ids, {
+      onUpdate: (a) => {
+        if (!live) return;
+        setResources((cur) => ({ ...cur, ...a.resources }));
+        setSearched(new Set(a.searched));
+      },
+    }).then((r) => {
+      if (!live) return;
+      setFinding(false);
+      if (r.error) setFindError(r.error);
+    });
+    return () => {
+      live = false;
+    };
+  }, [proposal.items, withResources]);
 
   const update = (key: string, change: Partial<PlanItem>) => setItems((xs) => xs.map((x) => (x.key === key ? { ...x, ...change } : x)));
   const move = (i: number, dir: -1 | 1) =>
@@ -237,6 +284,13 @@ function Review({
                         ))}
                       </select>
                     </div>
+                    {it.kind === "study" && withResources && (it.stepIds?.length ?? 0) > 0 && (
+                      finding && !it.stepIds!.every((id) => searched.has(id)) ? (
+                        <p role="status" className="mt-2 text-xs text-slate-500">🔎 Finding study resources (YouTube, Udemy, Coursera…)</p>
+                      ) : (
+                        <ResourcesDisclosure resources={resourcesFor(it.stepIds, resources)} searched={it.stepIds!.some((id) => searched.has(id))} />
+                      )
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col">
                     <SmallIcon label="Earlier" disabled={i === 0} onClick={() => move(i, -1)}>↑</SmallIcon>
@@ -259,6 +313,7 @@ function Review({
           )}
         </section>
       </div>
+      {findError && <p className="text-sm text-amber-700 dark:text-amber-300">Study resources: {findError}</p>}
       {error && <ErrorNote text={error} />}
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={saving || items.length === 0} onClick={() => onSave(items)} className={buttonClass.primary}>
@@ -281,11 +336,14 @@ export function SavedPlan({
   tasks,
   nowMinutes,
   isAdmin,
+  resources = {},
 }: {
   day: string;
   blocks: Block[];
   summary: string | null;
   tasks: Record<string, TaskStatus>;
+  // Study resources of the levels in the plan, by level id.
+  resources?: Record<string, Resource[]>;
   nowMinutes: number | null;
   isAdmin: boolean;
 }) {
@@ -321,6 +379,7 @@ export function SavedPlan({
         blocks={blocks}
         nowMinutes={nowMinutes}
         status={status}
+        resources={resources}
         onToggle={
           isAdmin
             ? (taskId, done) =>
@@ -340,10 +399,12 @@ function Timeline({
   nowMinutes = null,
   status,
   onToggle,
+  resources,
 }: {
   blocks: Block[];
   nowMinutes?: number | null;
   status?: Record<string, TaskStatus>;
+  resources?: Record<string, Resource[]>;
   onToggle?: (taskId: string, done: boolean) => void;
 }) {
   return (
@@ -352,11 +413,14 @@ function Timeline({
         const now = nowMinutes != null && nowMinutes >= b.start && nowMinutes < b.end;
         const done = Boolean(b.taskId && status?.[b.taskId] === "DONE");
         const rest = b.kind !== "work";
+        // Resources show once, on the first part of a study block.
+        const firstPart = !blocks.slice(0, i).some((x) => x.itemKey && x.itemKey === b.itemKey && x.taskId === b.taskId);
+        const studyResources = resources && firstPart ? resourcesFor(b.stepIds, resources) : [];
         return (
           <li
             key={i}
             aria-current={now ? "time" : undefined}
-            className={`flex items-center gap-3 border-l-4 py-1.5 pl-3 ${now ? "bg-blue-500/10" : ""} ${rest ? "text-slate-500" : ""}`}
+            className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-l-4 py-1.5 pl-3 ${now ? "bg-blue-500/10" : ""} ${rest ? "text-slate-500" : ""}`}
             style={{ borderLeftColor: rest ? "transparent" : (b.color ?? "#94a3b8") }}
           >
             <span className="w-[5.5rem] shrink-0 text-xs tabular-nums sm:w-24 sm:text-sm">
@@ -385,6 +449,12 @@ function Timeline({
               {formatMinutes(b.end - b.start)}
             </span>
             </span>
+            {studyResources.length > 0 && (
+              // Under the title, on its own line.
+              <div className="w-full pl-[8rem] sm:pl-[8.5rem]">
+                <ResourcesDisclosure resources={studyResources} searched />
+              </div>
+            )}
           </li>
         );
       })}

@@ -17,6 +17,7 @@ import { getPlannerSettings } from "@/lib/planner/settings";
 import { METHODS } from "@/lib/planner/prayers";
 import { minutesInZone, toHHMM } from "@/lib/planner/time";
 import type { Block } from "@/lib/planner/pack";
+import { readResources } from "@/lib/resources";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,12 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     getPlannerSettings(),
   ]);
   const planBlocks = (plan?.blocks ?? []) as unknown as Block[];
+  const planStepIds = [...new Set(planBlocks.flatMap((b) => (Array.isArray(b.stepIds) ? b.stepIds : [])))];
+  const planResources = planStepIds.length
+    ? Object.fromEntries(
+        (await db.learningStep.findMany({ where: { id: { in: planStepIds } }, select: { id: true, resources: true } })).map((s) => [s.id, readResources(s.resources)]),
+      )
+    : {};
   const planStatus = Object.fromEntries(dayTasks.map((t) => [t.id, t.status]));
   const canPlan = isAdmin && day >= todayDay;
   const methodLabel = METHODS.find((m) => m.value === planner.method)?.label ?? planner.method;
@@ -110,6 +117,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
           tasks={planStatus}
           nowMinutes={isToday ? minutesInZone(new Date(), planner.timeZone) : null}
           isAdmin={isAdmin}
+          resources={planResources}
         />
       )}
 

@@ -22,6 +22,7 @@ type FieldType =
   | "date?"
   | "number"
   | "json"
+  | "list" // a JSON list; missing in older backups = empty
   | readonly (string | null)[]; // one of these values (null in the list = optional)
 
 const PROJECT_STATUS = ["ACTIVE", "PAUSED", "DONE", "ARCHIVED"] as const;
@@ -46,7 +47,7 @@ const TABLES = {
   learningSteps: {
     id: "id", learningPathId: "id", milestoneId: "id?", title: "string", order: "int", done: "bool",
     doneAt: "date?", resourceUrl: "string?", notes: "string?", estimateMinutes: "int?", difficulty: DIFFICULTY, pages: "string?",
-    coveredById: "id?", createdAt: "date", updatedAt: "date",
+    coveredById: "id?", resources: "list", resourcesFoundAt: "date?", createdAt: "date", updatedAt: "date",
   },
   recurringTasks: {
     id: "id", title: "string", notes: "string?", rule: RULE, priority: PRIORITY, estimateMinutes: "int?",
@@ -256,6 +257,10 @@ function cleanRow(table: TableName, row: unknown, index: number): Row {
         out[field] = false;
         continue;
       }
+      if (type === "list") {
+        out[field] = [];
+        continue;
+      }
       if (field === "createdAt" || field === "updatedAt") {
         out[field] = new Date();
         continue;
@@ -267,6 +272,10 @@ function cleanRow(table: TableName, row: unknown, index: number): Row {
       out[field] = v;
     } else if (type === "number") {
       if (typeof v !== "number" || !Number.isFinite(v)) throw new BackupError(`${where} should be a number.`);
+      out[field] = v;
+    } else if (type === "list") {
+      if (!Array.isArray(v)) throw new BackupError(`${where} should be a list.`);
+      if (JSON.stringify(v).length > 200000) throw new BackupError(`${where} is too large.`);
       out[field] = v;
     } else if (type === "json") {
       if (JSON.stringify(v).length > 200000) throw new BackupError(`${where} is too large.`);
