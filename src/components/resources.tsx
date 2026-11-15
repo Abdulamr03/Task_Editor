@@ -91,7 +91,14 @@ export function ResourcesDisclosure({
   );
 }
 
-type Answer = { resources?: Record<string, Resource[]>; searched?: string[]; remaining?: number; error?: string; note?: string };
+type Answer = {
+  resources?: Record<string, Resource[]>;
+  searched?: string[];
+  remaining?: number;
+  refreshBefore?: string | null;
+  error?: string;
+  note?: string;
+};
 
 // Asks the server for these levels' resources, searching the ones never searched
 // (a few at a time, until all are done). Calls onUpdate after each round.
@@ -99,14 +106,16 @@ export async function fetchResources(
   stepIds: string[],
   options: { refresh?: boolean; onUpdate?: (a: Required<Pick<Answer, "resources" | "searched">>) => void } = {},
 ): Promise<{ error?: string }> {
-  let refresh = options.refresh === true; // (used for a single level)
+  // Search again: the server answers with its time, used for the next rounds.
+  let refresh = options.refresh === true;
+  let refreshBefore: string | undefined;
   for (let round = 0; round < 20; round++) {
     let data: Answer;
     try {
       const res = await fetch("/learning/resources", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ stepIds, refresh }),
+        body: JSON.stringify({ stepIds, refresh, refreshBefore }),
       });
       data = await res.json().catch(() => ({ error: "The server's answer couldn't be read." }));
     } catch {
@@ -115,14 +124,27 @@ export async function fetchResources(
     if (data.resources) options.onUpdate?.({ resources: data.resources, searched: data.searched ?? [] });
     if (data.error || data.note) return { error: data.error ?? data.note };
     if (!data.remaining) return {};
-    // "Search again" re-searches its levels once; later rounds take only what's left.
-    refresh = false;
+    if (refresh && data.refreshBefore) {
+      refreshBefore = data.refreshBefore;
+      refresh = false;
+    }
   }
   return {};
 }
 
 // "🔎 Find study resources" for a group of levels (learning path page).
-export function FindResourcesButton({ stepIds, label = "🔎 Find study resources" }: { stepIds: string[]; label?: string }) {
+export function FindResourcesButton({
+  stepIds,
+  label = "🔎 Find study resources",
+  refresh = false,
+  confirmText,
+}: {
+  stepIds: string[];
+  label?: string;
+  // Search these levels again even if they have resources.
+  refresh?: boolean;
+  confirmText?: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -141,11 +163,12 @@ export function FindResourcesButton({ stepIds, label = "🔎 Find study resource
         disabled={busy}
         className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-100 disabled:opacity-60 dark:border-slate-600 dark:hover:bg-slate-800"
         onClick={async () => {
+          if (confirmText && !confirm(confirmText)) return;
           setBusy(true);
           setError("");
           setSeconds(0);
           timer.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-          const result = await fetchResources(stepIds, { onUpdate: () => router.refresh() });
+          const result = await fetchResources(stepIds, { refresh, onUpdate: () => router.refresh() });
           if (timer.current) clearInterval(timer.current);
           setBusy(false);
           if (result.error) setError(result.error);
@@ -156,7 +179,7 @@ export function FindResourcesButton({ stepIds, label = "🔎 Find study resource
       </button>
       {busy && (
         <span role="status" className="text-sm text-slate-500">
-          Claude is searching YouTube, Udemy, Coursera and more… {seconds}s
+          Claude is searching for video courses (YouTube, Udemy, Coursera…) {seconds}s
         </span>
       )}
       {error && (

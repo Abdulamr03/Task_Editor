@@ -5,6 +5,18 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Study resources focus on video courses
+- The search now treats **video on demand** as the main way to learn: each
+  level gets at least two video courses or video lessons (a free one such as a
+  YouTube course or a Coursera course to audit, and a structured one on Udemy,
+  Coursera, Pluralsight, Scrimba…), with their length in the note. Practice
+  levels get project- or exercise-based video courses. Docs and handbooks are
+  at most one extra per level.
+- Resources are listed **courses and videos first** (stored ones too).
+- **↻ Search all again** under each milestone re-searches its unfinished levels
+  (asks first, runs in batches). The server's own time decides what is still
+  to redo, so it always stops.
+
 ### `feature` — Study resources (free and paid)
 - Learning levels can now hold **study resources**: YouTube videos and
   playlists, Udemy / Coursera / edX courses, official docs, articles…, each

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { readResources, type Resource } from "@/lib/resources";
+import { readResources, sortVideosFirst, type Resource } from "@/lib/resources";
 import { AiError, explainApiError, hasApiKey, MODEL } from "./client";
 
 // Finds study resources for learning levels with Claude and web search, so
@@ -21,13 +21,20 @@ export const LEVELS_PER_SEARCH = 6;
 
 const SYSTEM = `You find study resources for levels of a person's learning paths. Use web search to find real, current pages, then give your answer with the give_resources tool.
 
+The person learns mainly from video on demand: video courses and video lessons they can watch at their own pace. Make those the heart of every answer.
+
 For each level:
-- Give 2–4 resources that teach exactly that level (not just the general subject). Prefer well-known, well-rated, up-to-date ones.
-- Mix them: at least one free resource when a good one exists (YouTube videos or playlists, official documentation, freeCodeCamp, Khan Academy, MIT OpenCourseWare, good free articles), and a structured course when it helps (Coursera, Udemy, edX, Pluralsight, LinkedIn Learning…).
-- Link to the specific page: the video, playlist, course or doc page itself, never a search-results page. Only use links that appeared in your search results.
-- cost: FREE when it costs nothing; FREE_AUDIT when the content is free but a certificate or graded work costs money (typical for Coursera and edX courses); PAID when you must pay to learn from it (typical for Udemy, unless the course is marked free). For PAID, give a short price hint in price when the search shows one (e.g. "≈ $15 on sale"), else null.
-- kind: video, course, article, docs, book or practice.
-- note: a few words on why it fits (e.g. "45-min walkthrough, beginner friendly"), or null.
+- Give 3–4 resources that teach exactly that level (not just the general subject). Prefer well-known, well-rated, up-to-date ones.
+- At least 2 must be video courses or video lessons (kind "course" or "video"):
+  - a free one: a full course or playlist on YouTube (e.g. freeCodeCamp, Programming with Mosh, Traversy Media, CS50 and other well-known channels), a free Coursera / edX course to audit, Khan Academy, MIT OpenCourseWare videos;
+  - a structured course on a video platform: Udemy, Coursera, edX, Pluralsight, LinkedIn Learning, Scrimba, Frontend Masters, Zero To Mastery, DataCamp…
+- For practice levels (e.g. "practice Python"), pick project-based or exercise-based video courses (build-along projects, coding challenges solved on video). You may add one practice site (Exercism, Codewars, LeetCode…) as an extra.
+- Handbooks, official docs and articles: at most one per level, and only as an extra after the video courses — never instead of them.
+- Link to the specific page: the video, playlist or course page itself, never a search-results page or a channel's home page. Only use links that appeared in your search results.
+- List video courses and videos first.
+- cost: FREE when it costs nothing; FREE_AUDIT when the content is free but a certificate or graded work costs money (typical for Coursera and edX courses); PAID when you must pay to learn from it (typical for Udemy, Pluralsight, Frontend Masters, unless the course is marked free). For PAID, give a short price hint in price when the search shows one (e.g. "≈ $15 on sale", "$29/month"), else null.
+- kind: course (a structured video course), video (a single video or a playlist), practice, docs, article or book.
+- note: the length and why it fits, e.g. "12-hour course, beginner friendly" or "8 videos, build 3 projects", or null.
 - Several levels of the same path may share one course; reuse it where it fits.
 Be efficient with searches: one or two per level is usually enough. Write in English unless the level titles are in another language.`;
 
@@ -125,7 +132,7 @@ export async function findResources(levels: LevelToSearch[]): Promise<Map<string
     if (typeof e.levelId !== "string" || !ids.has(e.levelId)) continue;
     // Keep only links that really came up in the searches.
     const list = readResources(e.resources).filter((r) => seen.has(urlKey(r.url)));
-    found.set(e.levelId, dedupe([...(found.get(e.levelId) ?? []), ...list]).slice(0, 5));
+    found.set(e.levelId, sortVideosFirst(dedupe([...(found.get(e.levelId) ?? []), ...list])).slice(0, 5));
   }
   return found;
 }
