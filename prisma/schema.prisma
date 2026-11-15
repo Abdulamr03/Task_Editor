@@ -46,16 +46,16 @@ enum Difficulty {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(ADMIN)
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  passwordHash   String
+  role           Role     @default(ADMIN)
   // Goes up when the password changes or "log out everywhere" is used;
   // login cookies with an older number stop working.
-  sessionVersion Int    @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Project {
@@ -110,49 +110,52 @@ model Milestone {
 
 // A step ("level") of a learning path, optionally inside a milestone.
 model LearningStep {
-  id              String       @id @default(cuid())
-  learningPathId  String
-  learningPath    LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  learningPathId   String
+  learningPath     LearningPath   @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
   // Deleting a milestone keeps its steps; they move to "Other steps".
-  milestoneId     String?
-  milestone       Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
-  title           String
-  order           Int
-  done            Boolean      @default(false)
-  doneAt          DateTime?
-  resourceUrl     String?
-  notes           String?
-  estimateMinutes Int?
-  difficulty      Difficulty?
+  milestoneId      String?
+  milestone        Milestone?     @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  title            String
+  order            Int
+  done             Boolean        @default(false)
+  doneAt           DateTime?
+  resourceUrl      String?
+  notes            String?
+  estimateMinutes  Int?
+  difficulty       Difficulty?
   // Where it is in the source, e.g. "pp. 12–20" (from PDF import).
-  pages           String?
+  pages            String?
   // An earlier step that already covered this one (found by PDF import).
-  coveredById     String?
-  coveredBy       LearningStep?  @relation("CoveredBy", fields: [coveredById], references: [id], onDelete: SetNull)
-  covers          LearningStep[] @relation("CoveredBy")
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  coveredById      String?
+  coveredBy        LearningStep?  @relation("CoveredBy", fields: [coveredById], references: [id], onDelete: SetNull)
+  covers           LearningStep[] @relation("CoveredBy")
+  // Study resources found on the web (YouTube, Udemy, Coursera…), see src/lib/resources.ts.
+  resources        Json           @default("[]")
+  resourcesFoundAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([learningPathId, order])
   @@index([milestoneId])
 }
 
 model Task {
-  id              String     @id @default(cuid())
+  id              String      @id @default(cuid())
   title           String
   notes           String?
-  date            DateTime   @db.Date
-  status          TaskStatus @default(TODO)
-  priority        Priority   @default(MEDIUM)
+  date            DateTime    @db.Date
+  status          TaskStatus  @default(TODO)
+  priority        Priority    @default(MEDIUM)
   estimateMinutes Int?
   difficulty      Difficulty?
   // Set by "Plan my day": start time in minutes after midnight (540 = 09:00).
   plannedStart    Int?
   // Created by "Plan my day" (removed again if you re-plan and it isn't done).
-  fromPlan        Boolean    @default(false)
+  fromPlan        Boolean     @default(false)
   completedAt     DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   projectId       String?
   project         Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
@@ -161,10 +164,10 @@ model Task {
   recurringTaskId String?
   recurringTask   RecurringTask? @relation(fields: [recurringTaskId], references: [id], onDelete: SetNull)
 
-  @@index([date])
-  @@index([status])
   // A recurring task creates at most one task per day.
   @@unique([recurringTaskId, date])
+  @@index([date])
+  @@index([status])
 }
 
 model RecurringTask {

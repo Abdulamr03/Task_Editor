@@ -3,7 +3,10 @@
 import { useActionState, useEffect, useOptimistic, useState, useTransition } from "react";
 import { buttonClass, inputClass } from "@/components/ui";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DIFFICULTIES, DIFFICULTY_LABEL, formatMinutes } from "@/lib/tasks";
+import type { Resource } from "@/lib/resources";
+import { fetchResources, FindResourcesButton, ResourcesDisclosure } from "@/components/resources";
 import {
   addMilestone,
   addStep,
@@ -30,7 +33,13 @@ export type StepItem = {
   pages: string | null;
   // The earlier step that already covered this one.
   coveredBy: { title: string; pathId: string; pathTitle: string } | null;
+  resources: Resource[];
+  // Searched on the web before (even if nothing was found).
+  resourcesSearched: boolean;
 };
+
+// Unfinished levels that were never searched for resources.
+const unsearched = (steps: StepItem[]) => steps.filter((s) => !s.done && !s.coveredBy && !s.resourcesSearched).map((s) => s.id);
 
 export type MilestoneItem = { id: string; title: string; description: string | null };
 
@@ -65,6 +74,7 @@ export function StepList({
           <div className="flex flex-wrap gap-2">
             <AddStepForm pathId={pathId} />
             <AddMilestoneForm pathId={pathId} />
+            <FindResourcesButton stepIds={unsearched(steps)} />
           </div>
         )}
       </div>
@@ -96,6 +106,11 @@ export function StepList({
         <section>
           <h3 className="mb-2 font-semibold text-slate-500">Other steps</h3>
           <Steps steps={loose} firstNumber={number + 1} isAdmin={isAdmin} color={color} />
+          {isAdmin && (
+            <div className="mt-2">
+              <FindResourcesButton stepIds={unsearched(loose)} />
+            </div>
+          )}
         </section>
       )}
       {isAdmin && <AddMilestoneForm pathId={pathId} />}
@@ -215,7 +230,10 @@ function MilestoneSection({
       {steps.length > 0 && <Steps steps={steps} firstNumber={firstNumber} isAdmin={isAdmin} color={color} />}
       {isAdmin && (
         <div className="mt-2">
-          <AddStepForm pathId={pathId} milestoneId={milestone.id} label="+ Add level" />
+          <span className="flex flex-wrap items-start gap-2">
+            <AddStepForm pathId={pathId} milestoneId={milestone.id} label="+ Add level" />
+            <FindResourcesButton stepIds={unsearched(steps)} />
+          </span>
         </div>
       )}
     </section>
@@ -275,6 +293,9 @@ function StepRow({
   const [pending, startTransition] = useTransition();
   // Tick the box straight away; the server catches up a moment later.
   const [done, setOptimisticDone] = useOptimistic(step.done);
+  const router = useRouter();
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   if (editing) {
     return (
@@ -339,6 +360,24 @@ function StepRow({
             </Link>
           </p>
         )}
+        <ResourcesDisclosure
+          resources={step.resources}
+          searched={step.resourcesSearched}
+          busy={searching}
+          onSearchAgain={
+            isAdmin
+              ? async () => {
+                  setSearching(true);
+                  setSearchError("");
+                  const result = await fetchResources([step.id], { refresh: true });
+                  setSearching(false);
+                  if (result.error) setSearchError(result.error);
+                  router.refresh();
+                }
+              : undefined
+          }
+        />
+        {searchError && <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">{searchError}</p>}
         {done && step.doneAt && <p className="mt-1 text-xs text-slate-400">Done {formatDoneDate(step.doneAt)}</p>}
       </div>
       {isAdmin && (

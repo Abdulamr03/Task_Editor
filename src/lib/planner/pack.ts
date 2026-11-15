@@ -15,6 +15,8 @@ export type PlanItem = {
   projectId: string | null;
   learningPathId: string | null;
   color: string | null;
+  // Study items: the learning levels this block covers (for study resources).
+  stepIds?: string[];
 };
 
 export type FixedBlock = { kind: "prayer" | "lunch"; title: string; start: number; end: number };
@@ -29,6 +31,7 @@ export type Block = {
   difficulty?: Difficulty;
   color?: string | null;
   taskId?: string | null;
+  stepIds?: string[];
 };
 
 export type DayShape = { dayStart: number; dayEnd: number; maxBlock: number; breakMinutes: number };
@@ -84,6 +87,7 @@ export function pack(items: PlanItem[], fixed: FixedBlock[], day: DayShape): { b
         difficulty: item.difficulty,
         color: item.color,
         taskId: item.taskId,
+        ...(item.stepIds?.length ? { stepIds: item.stepIds } : {}),
       });
       cursor += chunk;
       remaining -= chunk;

@@ -117,6 +117,25 @@ split into steps you tick off.
   has its own progress bar; ↑ ↓ ✎ ✕ move, rename and delete it (its steps are
   kept and move to "Other steps"). Use **+ Add milestone** and **+ Add level**.
 
+### Study resources (YouTube, Udemy, Coursera…)
+
+Each level can list **study resources**: videos, courses, docs and articles to
+learn it from, each marked **Free**, **Free to audit** (free to watch, the
+certificate costs money, as on most Coursera / edX courses) or **Paid** (with a
+price hint when known, e.g. "≈ $15 on sale").
+
+- **🔎 Find study resources** (under each milestone) searches the web with
+  Claude for the unfinished levels that don't have resources yet, 6 levels at a
+  time (it continues by itself), usually 30 seconds to 2 minutes per batch.
+- Open **📚 Study resources** under a level to see them; **↻ Search again**
+  looks again for that level.
+- Only links that really came up in the web search are kept, so links aren't
+  made up, but check a course page for the current price.
+- Needs `ANTHROPIC_API_KEY`. Each search uses Claude plus web searches
+  (Anthropic charges $10 per 1,000 searches), so roughly a few cents per batch.
+  Level titles and the path's name and description are sent to Anthropic.
+- Resources are saved on the level and included in backups.
+
 ### Import a learning path from a PDF
 
 **Learning → 📄 Import from PDF** turns a syllabus, textbook or course notes
@@ -178,9 +197,13 @@ about a cent per plan).
    on your computer), **lunch** and a **break** after each focus block, all
    inside your hours, never overlapping. Long items are split into parts.
 4. Review: change lengths (− / +), difficulty, order (↑ ↓), titles, or remove
-   items — the timeline updates as you go. **Use this plan**.
+   items — the timeline updates as you go. With **Suggest study resources**
+   ticked (default), each study block lists videos and courses for its levels,
+   marked free or paid (see *Study resources* under Learning paths); levels
+   searched before show theirs straight away. **Use this plan**.
 5. Today shows **Your plan** as a timeline with a **Now** marker; tick blocks as
-   you finish them. Planned tasks show their start time in the list.
+   you finish them. Study blocks keep their **📚 Study resources**. Planned
+   tasks show their start time in the list.
    **Re-plan** replaces the plan (finished work is kept); re-planning later in
    the day keeps the morning's finished blocks, breaks and prayers in the
    timeline. **Clear plan** removes it.
@@ -282,7 +305,10 @@ src/app/logout/        Clears the login cookie (also used by Switch account)
 src/lib/theme.ts       Light / dark / system setting (cookie)
 src/lib/backup.ts      Backup file: build, check and restore
 src/lib/planner/       Day planner: prayer times, packing blocks on the clock, settings
-src/lib/ai/            Claude requests: client.ts (shared), pdf-plan.ts, day-plan.ts
+src/lib/ai/            Claude requests: client.ts (shared), pdf-plan.ts, day-plan.ts,
+                       resources.ts (study resources via web search)
+src/lib/resources.ts   Study resource type, labels and checks
+src/components/resources.tsx  Resource list, free/paid badges, "Find" button
 src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
 fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions

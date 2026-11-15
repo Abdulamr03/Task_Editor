@@ -9,6 +9,7 @@ import { StepList } from "./steps";
 import { LinkedTasks } from "@/components/linked-tasks";
 import { TimeSpent } from "@/components/time-spent";
 import { getTimeTotals } from "@/lib/time-stats";
+import { readResources } from "@/lib/resources";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,8 @@ export default async function LearningPathPage({ params }: { params: Promise<{ i
             estimateMinutes: s.estimateMinutes,
             difficulty: s.difficulty,
             pages: s.pages,
+            resources: readResources(s.resources),
+            resourcesSearched: s.resourcesFoundAt != null,
             coveredBy: s.coveredBy
               ? { title: s.coveredBy.title, pathId: s.coveredBy.learningPath.id, pathTitle: s.coveredBy.learningPath.title }
               : null,
