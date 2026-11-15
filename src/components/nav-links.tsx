@@ -3,34 +3,40 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/tasks", label: "Today" },
-  { href: "/projects", label: "Projects" },
-  { href: "/learning", label: "Learning" },
-  { href: "/courses", label: "Courses" },
-  { href: "/time", label: "Time" },
-  { href: "/achievements", label: "🏆 Achievements" },
-  { href: "/export", label: "Export" },
+export const LINKS = [
+  { href: "/", label: "Home", icon: "🏠" },
+  { href: "/tasks", label: "Today", icon: "✅" },
+  { href: "/projects", label: "Projects", icon: "📁" },
+  { href: "/learning", label: "Learning", icon: "🧭" },
+  { href: "/courses", label: "Courses", icon: "🎓" },
+  { href: "/time", label: "Time", icon: "⏱" },
+  { href: "/achievements", label: "Achievements", icon: "🏆" },
+  { href: "/export", label: "Export", icon: "📄" },
+  { href: "/settings", label: "Settings", icon: "⚙️" },
 ];
 
-export function NavLinks() {
+// The page links, listed down the side menu.
+export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-wrap items-center gap-1 text-sm">
+    <nav aria-label="Pages" className="flex flex-col gap-0.5">
       {LINKS.map((link) => {
         const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
         return (
           <Link
             key={link.href}
             href={link.href}
+            onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-md px-3 py-1.5 ${
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
               active
-                ? "bg-slate-100 font-medium text-slate-900 dark:bg-slate-800 dark:text-slate-100"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                ? "bg-blue-600/10 font-semibold text-blue-700 dark:bg-blue-400/15 dark:text-blue-300"
+                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             }`}
           >
+            <span aria-hidden="true" className="w-5 text-center">
+              {link.icon}
+            </span>
             {link.label}
           </Link>
         );

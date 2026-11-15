@@ -5,6 +5,16 @@ Each entry names the pull request label.
 
 ## Unreleased
 
+### `feature` — Side menu
+- The page links moved from the header into a **side menu** with icons
+  (Home, Today, Projects, Learning, Courses, Time, Achievements, Export,
+  Settings).
+- Wide screens: the menu stays open on the left; ☰ hides / shows it and the
+  choice is remembered (`sidebar` cookie, so there's no flicker on load).
+- Phones and tablets: ☰ slides it in over the page with a dark backdrop; a
+  link, the backdrop, ✕ or Esc closes it, and the page doesn't scroll behind it.
+- The top bar keeps ☰, the app name and the account menu (`src/components/app-shell.tsx`).
+
 ### `feature` — Courses and achievements
 - **Courses** (new page in the top bar): the course you're studying with its
   link, platform (found from the link), notes, and its **content as a

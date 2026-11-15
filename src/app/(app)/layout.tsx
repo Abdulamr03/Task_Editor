@@ -1,25 +1,19 @@
+import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth";
-import { NavLinks } from "@/components/nav-links";
+import { AppShell } from "@/components/app-shell";
+import { SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { UserMenu } from "@/components/user-menu";
 import { getTheme } from "@/lib/theme";
 
-// Layout for every page that needs a logged-in user.
+// Layout for every page that needs a logged-in user: top bar + side menu.
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [user, theme] = await Promise.all([requireUser(), getTheme()]);
+  const [user, theme, jar] = await Promise.all([requireUser(), getTheme(), cookies()]);
+  // On wide screens the side menu is open unless you closed it.
+  const sidebarOpen = jar.get(SIDEBAR_COOKIE)?.value !== "closed";
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        {/* On phones the links move to a second row under the app name. */}
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <span className="whitespace-nowrap font-bold">Task Editor</span>
-          <div className="order-last -mx-3 w-full sm:order-none sm:mx-0 sm:mr-auto sm:w-auto">
-            <NavLinks />
-          </div>
-          <UserMenu name={user.name} email={user.email} role={user.role} theme={theme} />
-        </div>
-      </header>
-      <div className="mx-auto max-w-5xl px-4 py-8">{children}</div>
-    </div>
+    <AppShell sidebarOpen={sidebarOpen} userMenu={<UserMenu name={user.name} email={user.email} role={user.role} theme={theme} />}>
+      {children}
+    </AppShell>
   );
 }

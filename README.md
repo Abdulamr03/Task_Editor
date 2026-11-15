@@ -34,6 +34,15 @@ You need **Node.js 20.19 or newer** (22 LTS recommended; check with `node -v`) a
    npm run dev
    ```
 
+## Finding your way around
+
+All pages are in the **side menu**: Home, Today, Projects, Learning, Courses,
+Time, Achievements, Export and Settings. On a computer it stays open on the
+left; **☰** (top left) hides it or shows it again, and the app remembers your
+choice. On a phone or tablet ☰ slides it in over the page; tap a page, the dark
+backdrop or press Esc to close it. Your account menu (theme, settings, log out)
+is at the top right.
+
 ## Login
 
 - **First visit:** with no accounts yet, the app opens a **Welcome** page where
@@ -89,7 +98,7 @@ The first page after logging in.
 
 ## Projects
 
-Open **Projects** in the top bar.
+Open **Projects** in the side menu (☰).
 
 - **New project**: name, description, status, start and due date, colour, notes.
   The due date can't be before the start date.
@@ -103,7 +112,7 @@ Open **Projects** in the top bar.
 
 ## Learning paths
 
-Open **Learning** in the top bar. A learning path is a course, book or topic
+Open **Learning** in the side menu (☰). A learning path is a course, book or topic
 split into steps you tick off.
 
 - **New learning path**: name, description, status, colour, notes. Then add steps.
@@ -162,7 +171,7 @@ Claude Opus 5.5 (`src/lib/ai/pdf-plan.ts`).
 
 ## Courses
 
-Open **Courses** in the top bar to track the courses you're studying
+Open **Courses** in the side menu (☰) to track the courses you're studying
 (Udemy, Coursera, YouTube playlists…).
 
 - **+ New course**: name, link (the platform is found from it), notes, the
@@ -183,7 +192,7 @@ Open **Courses** in the top bar to track the courses you're studying
 
 ## Achievements
 
-**🏆 Achievements** in the top bar lists what you've finished, with the date:
+**🏆 Achievements** in the side menu (☰) lists what you've finished, with the date:
 
 - 🎓 **Course completed**: every lesson of a course ticked.
 - 🧭 **Learning path completed**: every level of a learning path done.
@@ -194,7 +203,7 @@ Home shows your courses in progress and your latest achievements.
 
 ## Daily tasks
 
-Open **Today** in the top bar.
+Open **Today** in the side menu (☰).
 
 - **Add a task** in the box at the top. Click **+ Priority, time, project…** to
   set a priority, a time estimate in minutes, and a project or learning path.
@@ -256,7 +265,7 @@ shown as a check.
 
 ## Time log
 
-Open **Time** in the top bar to record how long you actually spent on things.
+Open **Time** in the side menu (☰) to record how long you actually spent on things.
 
 - **Log time**: date (today by default), time spent, project or learning path
   (optional), note (optional). Time can be typed as `45`, `45m`, `1h`,
@@ -270,7 +279,7 @@ Open **Time** in the top bar to record how long you actually spent on things.
 
 ## PDF export
 
-Open **Export** in the top bar.
+Open **Export** in the side menu (☰).
 
 1. **Dates**: pick a preset (This week, Last week, This month, Last month,
    Last 30 days, Today) or any From / To dates (up to one year).
@@ -353,7 +362,7 @@ src/lib/report/        Report data (data.ts) and PDF layout (document.tsx)
 fonts/                 Noto Sans for the PDF (+ its licence)
 src/app/login/         Login page and log in / log out actions
 src/app/setup/         First-time admin account page
-src/components/        Shared UI pieces (cards, buttons, progress bar, nav, item form)
+src/components/        Shared UI pieces (cards, buttons, progress bar, side menu, item form)
 src/lib/db.ts          Shared database client
 src/lib/session.ts     Login cookie (signed, HTTP-only, 7 days)
 src/lib/auth.ts        Password hashing, requireUser / requireAdmin
